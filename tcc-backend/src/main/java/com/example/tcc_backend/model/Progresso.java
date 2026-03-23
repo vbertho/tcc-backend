@@ -17,7 +17,7 @@ public class Progresso {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_progresso")
-    private Long id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "id_projeto", nullable = false)

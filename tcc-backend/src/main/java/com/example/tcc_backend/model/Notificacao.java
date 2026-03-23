@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "notificacao")
 @Data
@@ -15,7 +17,7 @@ public class Notificacao {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_notificacao")
-    private Long id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)

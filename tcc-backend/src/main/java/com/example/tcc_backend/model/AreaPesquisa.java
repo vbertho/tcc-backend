@@ -15,7 +15,7 @@ public class AreaPesquisa {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_area")
-    private Long id;
+    private Integer id;
 
     @NotBlank
     @Column(name = "nome", nullable = false, length = 100)

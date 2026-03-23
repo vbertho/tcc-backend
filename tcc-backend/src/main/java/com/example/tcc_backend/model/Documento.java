@@ -17,7 +17,7 @@ public class Documento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_documento")
-    private Long id;
+    private Integer id;
 
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)
