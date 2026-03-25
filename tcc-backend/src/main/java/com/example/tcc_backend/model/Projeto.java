@@ -3,6 +3,8 @@ package com.example.tcc_backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -55,10 +57,12 @@ public class Projeto {
 
     @ManyToOne
     @JoinColumn(name = "id_orientador")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Orientador orientador;
 
     @ManyToOne
     @JoinColumn(name = "id_aluno_criador")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Aluno alunoCriador;
 
     @PrePersist

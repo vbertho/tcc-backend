@@ -3,6 +3,8 @@ package com.example.tcc_backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "aluno")
@@ -19,6 +21,7 @@ public class Aluno {
 
     @OneToOne
     @JoinColumn(name = "id_usuario", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Usuario usuario;
 
     @NotBlank

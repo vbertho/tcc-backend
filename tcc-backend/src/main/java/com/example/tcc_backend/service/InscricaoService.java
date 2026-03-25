@@ -7,6 +7,7 @@ import com.example.tcc_backend.repository.InscricaoRepository;
 import com.example.tcc_backend.repository.ProjetoRepository;
 import com.example.tcc_backend.security.AuthHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +22,7 @@ public class InscricaoService {
     private final AlunoRepository alunoRepository;
     private final ProjetoRepository projetoRepository;
     private final AuthHelper authHelper;
+    private final NotificacaoService notificacaoService;
 
     public List<Inscricao> findAll() {
         return inscricaoRepository.findAll();
@@ -28,7 +30,7 @@ public class InscricaoService {
 
     public Inscricao findById(Integer id) {
         return inscricaoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inscrição não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "InscriÃ§Ã£o nÃ£o encontrada"));
     }
 
     public List<Inscricao> findByProjeto(Integer projetoId) {
@@ -43,17 +45,17 @@ public class InscricaoService {
         }
 
         Aluno aluno = alunoRepository.findByUsuarioId(usuarioLogado.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno nÃ£o encontrado"));
 
         Projeto projeto = projetoRepository.findById(dto.getProjetoId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nÃ£o encontrado"));
 
         if (inscricaoRepository.existsByAlunoIdAndProjetoId(aluno.getId(), projeto.getId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Você já está inscrito neste projeto");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Voce ja esta inscrito neste projeto");
         }
 
         if (projeto.getStatus() != StatusProjeto.ABERTO) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este projeto não está aceitando inscrições");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este projeto nÃ£o estÃ¡ aceitando inscriÃ§Ãµes");
         }
 
         Inscricao inscricao = Inscricao.builder()
@@ -61,7 +63,19 @@ public class InscricaoService {
                 .projeto(projeto)
                 .build();
 
-        return inscricaoRepository.save(inscricao);
+        try {
+            Inscricao salva = inscricaoRepository.save(inscricao);
+            if (projeto.getOrientador() != null) {
+                notificacaoService.criarNotificacao(
+                        projeto.getOrientador().getUsuario().getId(),
+                        "Nova inscricao recebida no projeto " + projeto.getTitulo(),
+                        TipoNotificacao.INSCRICAO_RECEBIDA
+                );
+            }
+            return salva;
+        } catch (DataIntegrityViolationException ex) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Voce ja esta inscrito neste projeto");
+        }
     }
 
     public Inscricao aprovar(Integer id) {
@@ -76,7 +90,13 @@ public class InscricaoService {
                 .dataInscricao(inscricao.getDataInscricao())
                 .build();
 
-        return inscricaoRepository.save(atualizada);
+        Inscricao salva = inscricaoRepository.save(atualizada);
+        notificacaoService.criarNotificacao(
+                inscricao.getAluno().getUsuario().getId(),
+                "Sua inscricao foi aprovada",
+                TipoNotificacao.INSCRICAO_APROVADA
+        );
+        return salva;
     }
 
     public Inscricao rejeitar(Integer id) {
@@ -91,7 +111,13 @@ public class InscricaoService {
                 .dataInscricao(inscricao.getDataInscricao())
                 .build();
 
-        return inscricaoRepository.save(atualizada);
+        Inscricao salva = inscricaoRepository.save(atualizada);
+        notificacaoService.criarNotificacao(
+                inscricao.getAluno().getUsuario().getId(),
+                "Sua inscricao foi rejeitada",
+                TipoNotificacao.INSCRICAO_REJEITADA
+        );
+        return salva;
     }
 
     public void cancel(Integer id) {
@@ -99,7 +125,7 @@ public class InscricaoService {
         Inscricao inscricao = findById(id);
 
         if (!inscricao.getAluno().getUsuario().getId().equals(usuarioLogado.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não pode cancelar a inscrição de outro aluno");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "VocÃª nÃ£o pode cancelar a inscriÃ§Ã£o de outro aluno");
         }
 
         inscricaoRepository.delete(inscricao);
@@ -110,11 +136,11 @@ public class InscricaoService {
         Inscricao inscricao = findById(id);
 
         if (!inscricao.getAluno().getUsuario().getId().equals(usuarioLogado.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não pode editar a inscrição de outro aluno");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "VocÃª nÃ£o pode editar a inscriÃ§Ã£o de outro aluno");
         }
 
         Projeto projeto = projetoRepository.findById(dto.getProjetoId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nÃ£o encontrado"));
 
         Inscricao atualizada = Inscricao.builder()
                 .id(inscricao.getId())
@@ -131,14 +157,14 @@ public class InscricaoService {
         Usuario usuarioLogado = authHelper.getCurrentUser();
 
         if (usuarioLogado.getTipo() != TipoUsuario.ORIENTADOR) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas orientadores podem aprovar ou rejeitar inscrições");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas orientadores podem aprovar ou rejeitar inscriÃ§Ãµes");
         }
 
         boolean isOrientadorDoProjeto = inscricao.getProjeto().getOrientador() != null &&
                 inscricao.getProjeto().getOrientador().getUsuario().getId().equals(usuarioLogado.getId());
 
         if (!isOrientadorDoProjeto) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não é o orientador deste projeto");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "VocÃª nÃ£o Ã© o orientador deste projeto");
         }
     }
 }

@@ -3,11 +3,15 @@ package com.example.tcc_backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.Check;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "feedback")
+@Check(constraints = "nota BETWEEN 1 AND 5")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,10 +33,12 @@ public class Feedback {
 
     @ManyToOne
     @JoinColumn(name = "id_projeto", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Projeto projeto;
 
     @ManyToOne
     @JoinColumn(name = "id_usuario_avaliador", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Usuario avaliador;
 
     @Column(name = "data_feedback")
