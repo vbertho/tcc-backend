@@ -1,9 +1,14 @@
 package com.example.tcc_backend.service;
 
 import com.example.tcc_backend.dto.request.UsuarioRequest;
+import com.example.tcc_backend.model.Inscricao;
+import com.example.tcc_backend.model.Projeto;
+import com.example.tcc_backend.model.TipoUsuario;
 import com.example.tcc_backend.model.Usuario;
 import com.example.tcc_backend.repository.AlunoRepository;
+import com.example.tcc_backend.repository.InscricaoRepository;
 import com.example.tcc_backend.repository.OrientadorRepository;
+import com.example.tcc_backend.repository.ProjetoRepository;
 import com.example.tcc_backend.repository.UsuarioRepository;
 import com.example.tcc_backend.security.AuthHelper;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +25,8 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final AlunoRepository alunoRepository;
     private final OrientadorRepository orientadorRepository;
+    private final ProjetoRepository projetoRepository;
+    private final InscricaoRepository inscricaoRepository;
     private final AuthHelper authHelper;
 
     public List<Usuario> findAll() {
@@ -73,5 +80,26 @@ public class UsuarioService {
                 .build();
 
         usuarioRepository.save(desativado);
+    }
+
+    public List<Projeto> findProjetosByUsuario(Integer id) {
+        findById(id);
+        return projetoRepository.findByOrientadorUsuarioIdOrAlunoCriadorUsuarioId(id, id);
+    }
+
+    public List<Inscricao> findInscricoesByUsuario(Integer id) {
+        Usuario usuario = findById(id);
+        if (usuario.getTipo() == TipoUsuario.ALUNO) {
+            return inscricaoRepository.findByAlunoUsuarioId(id);
+        }
+        return inscricaoRepository.findByProjetoOrientadorUsuarioId(id);
+    }
+
+    public List<Inscricao> findMinhasInscricoes() {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        if (usuarioLogado.getTipo() != TipoUsuario.ALUNO) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Endpoint exclusivo para alunos");
+        }
+        return inscricaoRepository.findByAlunoUsuarioId(usuarioLogado.getId());
     }
 }

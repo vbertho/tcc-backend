@@ -4,15 +4,19 @@ import com.example.tcc_backend.dto.request.ProjetoRequest;
 import com.example.tcc_backend.model.*;
 import com.example.tcc_backend.repository.AlunoRepository;
 import com.example.tcc_backend.repository.AreaPesquisaRepository;
+import com.example.tcc_backend.repository.InscricaoRepository;
 import com.example.tcc_backend.repository.OrientadorRepository;
 import com.example.tcc_backend.repository.ProjetoRepository;
+import com.example.tcc_backend.repository.UsuarioRepository;
 import com.example.tcc_backend.security.AuthHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -21,8 +25,11 @@ public class ProjetoService {
     private final ProjetoRepository projetoRepository;
     private final OrientadorRepository orientadorRepository;
     private final AlunoRepository alunoRepository;
+    private final InscricaoRepository inscricaoRepository;
     private final AreaPesquisaRepository areaPesquisaRepository;
+    private final UsuarioRepository usuarioRepository;
     private final AuthHelper authHelper;
+    private final NotificacaoService notificacaoService;
 
     public List<Projeto> findAll() {
         return projetoRepository.findAll();
@@ -30,7 +37,7 @@ public class ProjetoService {
 
     public Projeto findById(Integer id) {
         return projetoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nao encontrado"));
     }
 
     public List<Projeto> findByStatus(StatusProjeto status) {
@@ -41,6 +48,14 @@ public class ProjetoService {
         return projetoRepository.findByAreaId(areaId);
     }
 
+    public List<Projeto> findByAreaNome(String area) {
+        return projetoRepository.findByAreaNomeContainingIgnoreCase(area);
+    }
+
+    public List<Projeto> findByCursoNome(String curso) {
+        return projetoRepository.findByAreaCursoNomeContainingIgnoreCase(curso);
+    }
+
     public List<Projeto> findByBusca(String busca) {
         return projetoRepository.findByTituloContainingIgnoreCase(busca);
     }
@@ -49,7 +64,7 @@ public class ProjetoService {
         Usuario usuarioLogado = authHelper.getCurrentUser();
 
         AreaPesquisa area = areaPesquisaRepository.findById(dto.getAreaId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Área não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Area nao encontrada"));
 
         Projeto.ProjetoBuilder builder = Projeto.builder()
                 .titulo(dto.getTitulo())
@@ -61,17 +76,29 @@ public class ProjetoService {
                 .dataLimiteInscricao(dto.getDataLimiteInscricao())
                 .area(area);
 
+        Aluno alunoCriador = null;
         if (usuarioLogado.getTipo() == TipoUsuario.ORIENTADOR) {
             Orientador orientador = orientadorRepository.findByUsuarioId(usuarioLogado.getId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orientador não encontrado"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orientador nao encontrado"));
             builder.orientador(orientador);
         } else {
-            Aluno aluno = alunoRepository.findByUsuarioId(usuarioLogado.getId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno não encontrado"));
-            builder.alunoCriador(aluno);
+            alunoCriador = alunoRepository.findByUsuarioId(usuarioLogado.getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno nao encontrado"));
+            builder.alunoCriador(alunoCriador);
         }
 
-        return projetoRepository.save(builder.build());
+        Projeto projeto = projetoRepository.save(builder.build());
+
+        if (alunoCriador != null) {
+            Inscricao inscricaoCriador = Inscricao.builder()
+                    .aluno(alunoCriador)
+                    .projeto(projeto)
+                    .status(StatusInscricao.APROVADO)
+                    .build();
+            inscricaoRepository.save(inscricaoCriador);
+        }
+
+        return projeto;
     }
 
     public Projeto update(Integer id, ProjetoRequest dto) {
@@ -85,11 +112,11 @@ public class ProjetoService {
                 projeto.getAlunoCriador().getUsuario().getId().equals(usuarioLogado.getId());
 
         if (!isOrientadorDoProjeto && !isAlunoCriador) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para editar este projeto");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Voce nao tem permissao para editar este projeto");
         }
 
         AreaPesquisa area = areaPesquisaRepository.findById(dto.getAreaId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Área não encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Area nao encontrada"));
 
         Projeto atualizado = Projeto.builder()
                 .id(projeto.getId())
@@ -121,9 +148,87 @@ public class ProjetoService {
                 projeto.getAlunoCriador().getUsuario().getId().equals(usuarioLogado.getId());
 
         if (!isOrientadorDoProjeto && !isAlunoCriador) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não tem permissão para excluir este projeto");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Voce nao tem permissao para excluir este projeto");
         }
 
         projetoRepository.delete(projeto);
+    }
+
+    public Inscricao recrutar(Integer projetoId, Integer usuarioId) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        Projeto projeto = findById(projetoId);
+        validarGestaoProjeto(projeto, usuarioLogado.getId());
+
+        Usuario usuarioColaborador = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+
+        if (usuarioColaborador.getTipo() != TipoUsuario.ALUNO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Somente alunos podem ser recrutados");
+        }
+
+        Aluno aluno = alunoRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno nao encontrado"));
+
+        Inscricao inscricao = inscricaoRepository.findByProjetoIdAndAlunoUsuarioId(projetoId, usuarioId).orElse(null);
+
+        if (inscricao == null) {
+            inscricao = Inscricao.builder()
+                    .aluno(aluno)
+                    .projeto(projeto)
+                    .status(StatusInscricao.APROVADO)
+                    .build();
+        } else {
+            inscricao.setStatus(StatusInscricao.APROVADO);
+        }
+
+        Inscricao salva = inscricaoRepository.save(inscricao);
+        notificacaoService.criarNotificacao(usuarioId, "Voce foi recrutado para um projeto", TipoNotificacao.INSCRICAO_APROVADA);
+        return salva;
+    }
+
+    public List<Usuario> listarColaboradores(Integer projetoId) {
+        Projeto projeto = findById(projetoId);
+        Set<Usuario> colaboradores = new LinkedHashSet<>();
+
+        if (projeto.getOrientador() != null) {
+            colaboradores.add(projeto.getOrientador().getUsuario());
+        }
+        if (projeto.getAlunoCriador() != null) {
+            colaboradores.add(projeto.getAlunoCriador().getUsuario());
+        }
+
+        List<Inscricao> aprovadas = inscricaoRepository.findByProjetoIdAndStatus(projetoId, StatusInscricao.APROVADO);
+        for (Inscricao inscricao : aprovadas) {
+            colaboradores.add(inscricao.getAluno().getUsuario());
+        }
+
+        return colaboradores.stream().toList();
+    }
+
+    public void removerColaborador(Integer projetoId, Integer usuarioId) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        Projeto projeto = findById(projetoId);
+        validarGestaoProjeto(projeto, usuarioLogado.getId());
+
+        if (projeto.getAlunoCriador() != null && projeto.getAlunoCriador().getUsuario().getId().equals(usuarioId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nao e permitido remover o aluno criador do projeto");
+        }
+
+        Inscricao inscricao = inscricaoRepository.findByProjetoIdAndAlunoUsuarioId(projetoId, usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Colaborador nao encontrado no projeto"));
+
+        inscricaoRepository.delete(inscricao);
+    }
+
+    private void validarGestaoProjeto(Projeto projeto, Integer usuarioLogadoId) {
+        boolean isOrientadorDoProjeto = projeto.getOrientador() != null &&
+                projeto.getOrientador().getUsuario().getId().equals(usuarioLogadoId);
+
+        boolean isAlunoCriador = projeto.getAlunoCriador() != null &&
+                projeto.getAlunoCriador().getUsuario().getId().equals(usuarioLogadoId);
+
+        if (!isOrientadorDoProjeto && !isAlunoCriador) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para gerenciar colaboradores deste projeto");
+        }
     }
 }

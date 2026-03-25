@@ -2,11 +2,21 @@ package com.example.tcc_backend.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inscricao")
+@Table(
+        name = "inscricao",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_inscricao_aluno_projeto",
+                        columnNames = {"id_aluno", "id_projeto"}
+                )
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,10 +30,12 @@ public class Inscricao {
 
     @ManyToOne
     @JoinColumn(name = "id_aluno", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Aluno aluno;
 
     @ManyToOne
     @JoinColumn(name = "id_projeto", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Projeto projeto;
 
     @Enumerated(EnumType.STRING)

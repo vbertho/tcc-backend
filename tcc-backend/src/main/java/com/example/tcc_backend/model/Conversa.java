@@ -2,6 +2,8 @@ package com.example.tcc_backend.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -20,6 +22,7 @@ public class Conversa {
 
     @ManyToOne
     @JoinColumn(name = "id_projeto", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Projeto projeto;
 
     @Column(name = "data_criacao")

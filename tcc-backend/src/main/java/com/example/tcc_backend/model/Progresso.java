@@ -3,6 +3,8 @@ package com.example.tcc_backend.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +23,7 @@ public class Progresso {
 
     @ManyToOne
     @JoinColumn(name = "id_projeto", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Projeto projeto;
 
     @NotBlank

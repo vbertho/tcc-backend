@@ -11,5 +11,8 @@ import java.util.List;
 public interface ProjetoRepository extends JpaRepository<Projeto, Integer> {
     List<Projeto> findByStatus(StatusProjeto status);
     List<Projeto> findByAreaId(Integer areaId);
+    List<Projeto> findByAreaNomeContainingIgnoreCase(String area);
+    List<Projeto> findByAreaCursoNomeContainingIgnoreCase(String curso);
     List<Projeto> findByTituloContainingIgnoreCase(String busca);
+    List<Projeto> findByOrientadorUsuarioIdOrAlunoCriadorUsuarioId(Integer orientadorUsuarioId, Integer alunoCriadorUsuarioId);
 }
