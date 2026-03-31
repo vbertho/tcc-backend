@@ -44,6 +44,11 @@ public class DocumentoService {
     }
 
     public List<Documento> listarPorUsuario(Integer usuarioId) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        if (!usuarioLogado.getId().equals(usuarioId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para listar documentos de outro usuario");
+        }
+
         usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
         return documentoRepository.findByUsuarioId(usuarioId);

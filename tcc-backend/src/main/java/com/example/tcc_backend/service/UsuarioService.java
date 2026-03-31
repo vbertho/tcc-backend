@@ -30,19 +30,24 @@ public class UsuarioService {
     private final AuthHelper authHelper;
 
     public List<Usuario> findAll() {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        if (usuarioLogado.getTipo() != TipoUsuario.ORIENTADOR) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas orientadores podem listar usuarios");
+        }
         return usuarioRepository.findAll();
     }
 
     public Usuario findById(Integer id) {
+        validarAcessoAoUsuario(id, true);
         return usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
     }
 
     public Usuario update(Integer id, UsuarioRequest dto) {
         Usuario usuarioLogado = authHelper.getCurrentUser();
 
         if (!usuarioLogado.getId().equals(id)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não pode editar outro usuário");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Voce nao pode editar outro usuario");
         }
 
         Usuario usuario = findById(id);
@@ -64,7 +69,7 @@ public class UsuarioService {
         Usuario usuarioLogado = authHelper.getCurrentUser();
 
         if (!usuarioLogado.getId().equals(id)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Você não pode remover outro usuário");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Voce nao pode remover outro usuario");
         }
 
         Usuario usuario = findById(id);
@@ -83,11 +88,13 @@ public class UsuarioService {
     }
 
     public List<Projeto> findProjetosByUsuario(Integer id) {
+        validarAcessoAoUsuario(id, true);
         findById(id);
         return projetoRepository.findByOrientadorUsuarioIdOrAlunoCriadorUsuarioId(id, id);
     }
 
     public List<Inscricao> findInscricoesByUsuario(Integer id) {
+        validarAcessoAoUsuario(id, false);
         Usuario usuario = findById(id);
         if (usuario.getTipo() == TipoUsuario.ALUNO) {
             return inscricaoRepository.findByAlunoUsuarioId(id);
@@ -101,5 +108,19 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Endpoint exclusivo para alunos");
         }
         return inscricaoRepository.findByAlunoUsuarioId(usuarioLogado.getId());
+    }
+
+    private void validarAcessoAoUsuario(Integer id, boolean permitirOrientador) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+
+        if (usuarioLogado.getId().equals(id)) {
+            return;
+        }
+
+        if (permitirOrientador && usuarioLogado.getTipo() == TipoUsuario.ORIENTADOR) {
+            return;
+        }
+
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para acessar dados de outro usuario");
     }
 }
