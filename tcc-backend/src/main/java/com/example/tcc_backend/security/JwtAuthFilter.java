@@ -3,6 +3,7 @@ package com.example.tcc_backend.security;
 import com.example.tcc_backend.model.Usuario;
 import com.example.tcc_backend.repository.UsuarioRepository;
 import com.example.tcc_backend.service.JwtService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,7 +41,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         final String token = authHeader.substring(7);
-        final String email = jwtService.extractEmail(token);
+        final String email;
+
+        try {
+            email = jwtService.extractEmail(token);
+        } catch (JwtException | IllegalArgumentException ex) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
