@@ -1,5 +1,6 @@
 package com.example.tcc_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -34,6 +35,7 @@ public class Usuario implements UserDetails {
     private String email;
 
     @NotBlank
+    @JsonIgnore
     @Column(name = "senha", nullable = false, length = 255)
     private String senha;
 
@@ -59,6 +61,7 @@ public class Usuario implements UserDetails {
     }
 
     @Override
+    @JsonIgnore
     public String getPassword() { return senha; }
 
     @Override

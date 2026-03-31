@@ -1,12 +1,12 @@
 package com.example.tcc_backend.controller;
 
+import com.example.tcc_backend.dto.response.UsuarioResponse;
 import com.example.tcc_backend.service.UsuarioService;
 import com.example.tcc_backend.service.DocumentoService;
 import com.example.tcc_backend.model.Documento;
 import com.example.tcc_backend.model.Inscricao;
 import com.example.tcc_backend.model.Projeto;
 import com.example.tcc_backend.dto.request.UsuarioRequest;
-import com.example.tcc_backend.model.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,19 +24,23 @@ public class UsuarioController {
     private final DocumentoService documentoService;
 
     @GetMapping
-    public ResponseEntity<List<Usuario>> findAll() {
-        return ResponseEntity.ok(usuarioService.findAll());
+    public ResponseEntity<List<UsuarioResponse>> findAll() {
+        return ResponseEntity.ok(
+                usuarioService.findAll().stream()
+                        .map(UsuarioResponse::fromEntity)
+                        .toList()
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Usuario> findById(@PathVariable Integer id) {
-        return ResponseEntity.ok(usuarioService.findById(id));
+    public ResponseEntity<UsuarioResponse> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(UsuarioResponse.fromEntity(usuarioService.findById(id)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> update(@PathVariable Integer id,
-                                          @RequestBody @Valid UsuarioRequest dto) {
-        return ResponseEntity.ok(usuarioService.update(id, dto));
+    public ResponseEntity<UsuarioResponse> update(@PathVariable Integer id,
+                                                  @RequestBody @Valid UsuarioRequest dto) {
+        return ResponseEntity.ok(UsuarioResponse.fromEntity(usuarioService.update(id, dto)));
     }
 
     @DeleteMapping("/{id}")

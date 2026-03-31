@@ -2,10 +2,10 @@ package com.example.tcc_backend.controller;
 
 import com.example.tcc_backend.dto.request.ProjetoRequest;
 import com.example.tcc_backend.dto.request.RecrutarColaboradorRequest;
+import com.example.tcc_backend.dto.response.UsuarioResponse;
 import com.example.tcc_backend.model.Inscricao;
 import com.example.tcc_backend.model.Projeto;
 import com.example.tcc_backend.model.StatusProjeto;
-import com.example.tcc_backend.model.Usuario;
 import com.example.tcc_backend.service.ProjetoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -76,8 +76,12 @@ public class ProjetoController {
     }
 
     @GetMapping("/{id}/colaboradores")
-    public ResponseEntity<List<Usuario>> listarColaboradores(@PathVariable Integer id) {
-        return ResponseEntity.ok(projetoService.listarColaboradores(id));
+    public ResponseEntity<List<UsuarioResponse>> listarColaboradores(@PathVariable Integer id) {
+        return ResponseEntity.ok(
+                projetoService.listarColaboradores(id).stream()
+                        .map(UsuarioResponse::fromEntity)
+                        .toList()
+        );
     }
 
     @DeleteMapping("/{id}/colaboradores/{usuarioId}")
