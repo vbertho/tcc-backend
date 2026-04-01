@@ -17,23 +17,35 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class DocumentoService {
 
+    private static final Map<String, List<String>> EXTENSOES_PERMITIDAS = Map.of(
+            "application/pdf", List.of(".pdf"),
+            "application/msword", List.of(".doc"),
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document", List.of(".docx")
+    );
+
     private final DocumentoRepository documentoRepository;
     private final UsuarioRepository usuarioRepository;
     private final AuthHelper authHelper;
 
     public Documento upload(TipoDocumento tipo, MultipartFile arquivo) {
+        if (tipo == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo do documento obrigatorio");
+        }
+
         if (arquivo == null || arquivo.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo obrigatorio");
         }
 
         Usuario usuarioLogado = authHelper.getCurrentUser();
-        String caminho = salvarArquivo(arquivo);
+        String caminho = salvarArquivo(usuarioLogado, arquivo);
 
         Documento documento = Documento.builder()
                 .usuario(usuarioLogado)
@@ -63,20 +75,48 @@ public class DocumentoService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para remover este documento");
         }
 
+        apagarArquivo(documento.getCaminho());
         documentoRepository.delete(documento);
     }
 
-    private String salvarArquivo(MultipartFile arquivo) {
+    private String salvarArquivo(Usuario usuario, MultipartFile arquivo) {
         try {
-            Path dir = Path.of("uploads");
+            String extensao = validarArquivo(arquivo);
+            Path dir = Path.of("uploads", "documentos", usuario.getId().toString());
             Files.createDirectories(dir);
-            String nomeOriginal = arquivo.getOriginalFilename() == null ? "arquivo.bin" : arquivo.getOriginalFilename();
-            String nomeArquivo = UUID.randomUUID() + "_" + nomeOriginal.replaceAll("\\s+", "_");
+            String nomeArquivo = UUID.randomUUID() + extensao;
             Path destino = dir.resolve(nomeArquivo);
             Files.copy(arquivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
             return destino.toString();
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao salvar arquivo");
+        }
+    }
+
+    private String validarArquivo(MultipartFile arquivo) {
+        String contentType = arquivo.getContentType();
+        if (contentType == null || !EXTENSOES_PERMITIDAS.containsKey(contentType)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de arquivo nao permitido");
+        }
+
+        String nomeOriginal = arquivo.getOriginalFilename() == null
+                ? ""
+                : Path.of(arquivo.getOriginalFilename()).getFileName().toString().toLowerCase(Locale.ROOT);
+
+        for (String extensao : EXTENSOES_PERMITIDAS.get(contentType)) {
+            if (nomeOriginal.endsWith(extensao)) {
+                return extensao;
+            }
+        }
+
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Extensao de arquivo nao permitida");
+    }
+
+    private void apagarArquivo(String caminho) {
+        try {
+            Files.deleteIfExists(Path.of(caminho));
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Falha ao remover arquivo");
         }
     }
 }
