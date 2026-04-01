@@ -8,4 +8,5 @@ import java.util.List;
 public interface FeedbackRepository extends JpaRepository<Feedback, Integer> {
     List<Feedback> findByProjetoId(Integer projetoId);
     List<Feedback> findByProjetoOrientadorUsuarioIdOrProjetoAlunoCriadorUsuarioId(Integer orientadorUsuarioId, Integer alunoCriadorUsuarioId);
+    boolean existsByProjetoIdAndAvaliadorId(Integer projetoId, Integer avaliadorId);
 }

@@ -10,7 +10,15 @@ import org.hibernate.annotations.OnDeleteAction;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "feedback")
+@Table(
+        name = "feedback",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_feedback_projeto_avaliador",
+                        columnNames = {"id_projeto", "id_usuario_avaliador"}
+                )
+        }
+)
 @Check(constraints = "nota BETWEEN 1 AND 5")
 @Data
 @NoArgsConstructor
