@@ -30,7 +30,7 @@ public class InscricaoService {
 
     public Inscricao findById(Integer id) {
         return inscricaoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "InscriÃ§Ã£o nÃ£o encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inscricao nao encontrada"));
     }
 
     public List<Inscricao> findByProjeto(Integer projetoId) {
@@ -45,17 +45,17 @@ public class InscricaoService {
         }
 
         Aluno aluno = alunoRepository.findByUsuarioId(usuarioLogado.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno nÃ£o encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno nao encontrado"));
 
         Projeto projeto = projetoRepository.findById(dto.getProjetoId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nÃ£o encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nao encontrado"));
 
         if (inscricaoRepository.existsByAlunoIdAndProjetoId(aluno.getId(), projeto.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Voce ja esta inscrito neste projeto");
         }
 
         if (projeto.getStatus() != StatusProjeto.ABERTO) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este projeto nÃ£o estÃ¡ aceitando inscriÃ§Ãµes");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Este projeto nao esta aceitando inscricoes");
         }
 
         Inscricao inscricao = Inscricao.builder()
@@ -125,7 +125,7 @@ public class InscricaoService {
         Inscricao inscricao = findById(id);
 
         if (!inscricao.getAluno().getUsuario().getId().equals(usuarioLogado.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "VocÃª nÃ£o pode cancelar a inscriÃ§Ã£o de outro aluno");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Voce nao pode cancelar a inscricao de outro aluno");
         }
 
         inscricaoRepository.delete(inscricao);
@@ -136,11 +136,11 @@ public class InscricaoService {
         Inscricao inscricao = findById(id);
 
         if (!inscricao.getAluno().getUsuario().getId().equals(usuarioLogado.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "VocÃª nÃ£o pode editar a inscriÃ§Ã£o de outro aluno");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Voce nao pode editar a inscricao de outro aluno");
         }
 
         Projeto projeto = projetoRepository.findById(dto.getProjetoId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nÃ£o encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nao encontrado"));
 
         Inscricao atualizada = Inscricao.builder()
                 .id(inscricao.getId())
@@ -157,14 +157,15 @@ public class InscricaoService {
         Usuario usuarioLogado = authHelper.getCurrentUser();
 
         if (usuarioLogado.getTipo() != TipoUsuario.ORIENTADOR) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas orientadores podem aprovar ou rejeitar inscriÃ§Ãµes");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas orientadores podem aprovar ou rejeitar inscricoes");
         }
 
         boolean isOrientadorDoProjeto = inscricao.getProjeto().getOrientador() != null &&
                 inscricao.getProjeto().getOrientador().getUsuario().getId().equals(usuarioLogado.getId());
 
         if (!isOrientadorDoProjeto) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "VocÃª nÃ£o Ã© o orientador deste projeto");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Voce nao e o orientador deste projeto");
         }
     }
 }
+
