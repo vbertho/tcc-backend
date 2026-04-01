@@ -26,6 +26,11 @@ public class Progresso {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Projeto projeto;
 
+    @ManyToOne
+    @JoinColumn(name = "id_usuario_autor")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Usuario autor;
+
     @NotBlank
     @Column(name = "descricao", nullable = false, columnDefinition = "TEXT")
     private String descricao;
