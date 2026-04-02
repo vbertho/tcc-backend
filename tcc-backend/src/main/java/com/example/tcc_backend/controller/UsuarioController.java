@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin("*")
 @RestController
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor
@@ -69,3 +68,4 @@ public class UsuarioController {
         return ResponseEntity.ok(documentoService.listarPorUsuario(id));
     }
 }
+

@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@CrossOrigin("*")
 @RestController
 @RequestMapping("/api/documentos")
 @RequiredArgsConstructor
@@ -29,3 +28,4 @@ public class DocumentoController {
         return ResponseEntity.noContent().build();
     }
 }
+

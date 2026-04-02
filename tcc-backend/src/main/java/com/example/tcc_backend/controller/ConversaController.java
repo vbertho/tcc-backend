@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin("*")
 @RestController
 @RequestMapping("/api/conversas")
 @RequiredArgsConstructor
@@ -42,3 +41,4 @@ public class ConversaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(conversaService.enviarMensagem(id, dto.getConteudo()));
     }
 }
+

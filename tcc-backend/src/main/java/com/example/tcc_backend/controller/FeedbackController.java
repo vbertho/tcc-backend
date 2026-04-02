@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin("*")
 @RestController
 @RequestMapping("/api/feedback")
 @RequiredArgsConstructor
@@ -34,3 +33,4 @@ public class FeedbackController {
         return ResponseEntity.ok(feedbackService.listarPorUsuario(id));
     }
 }
+
