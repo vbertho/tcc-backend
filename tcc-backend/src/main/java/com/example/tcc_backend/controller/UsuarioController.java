@@ -1,9 +1,9 @@
 package com.example.tcc_backend.controller;
 
+import com.example.tcc_backend.dto.response.DocumentoResponse;
 import com.example.tcc_backend.dto.response.UsuarioResponse;
 import com.example.tcc_backend.service.UsuarioService;
 import com.example.tcc_backend.service.DocumentoService;
-import com.example.tcc_backend.model.Documento;
 import com.example.tcc_backend.model.Inscricao;
 import com.example.tcc_backend.model.Projeto;
 import com.example.tcc_backend.dto.request.UsuarioRequest;
@@ -64,8 +64,12 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}/documentos")
-    public ResponseEntity<List<Documento>> findDocumentosByUsuario(@PathVariable Integer id) {
-        return ResponseEntity.ok(documentoService.listarPorUsuario(id));
+    public ResponseEntity<List<DocumentoResponse>> findDocumentosByUsuario(@PathVariable Integer id) {
+        return ResponseEntity.ok(
+                documentoService.listarPorUsuario(id).stream()
+                        .map(DocumentoResponse::fromEntity)
+                        .toList()
+        );
     }
 }
 

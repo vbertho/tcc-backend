@@ -1,6 +1,6 @@
 package com.example.tcc_backend.controller;
 
-import com.example.tcc_backend.model.Documento;
+import com.example.tcc_backend.dto.response.DocumentoResponse;
 import com.example.tcc_backend.model.TipoDocumento;
 import com.example.tcc_backend.service.DocumentoService;
 import lombok.RequiredArgsConstructor;
@@ -17,9 +17,10 @@ public class DocumentoController {
     private final DocumentoService documentoService;
 
     @PostMapping("/upload")
-    public ResponseEntity<Documento> upload(@RequestParam("tipo") TipoDocumento tipo,
-                                            @RequestParam("arquivo") MultipartFile arquivo) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(documentoService.upload(tipo, arquivo));
+    public ResponseEntity<DocumentoResponse> upload(@RequestParam("tipo") TipoDocumento tipo,
+                                                    @RequestParam("arquivo") MultipartFile arquivo) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(DocumentoResponse.fromEntity(documentoService.upload(tipo, arquivo)));
     }
 
     @DeleteMapping("/{id}")

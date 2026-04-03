@@ -1,7 +1,7 @@
 package com.example.tcc_backend.controller;
 
 import com.example.tcc_backend.dto.request.FeedbackRequest;
-import com.example.tcc_backend.model.Feedback;
+import com.example.tcc_backend.dto.response.FeedbackResponse;
 import com.example.tcc_backend.service.FeedbackService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,18 +19,27 @@ public class FeedbackController {
     private final FeedbackService feedbackService;
 
     @PostMapping
-    public ResponseEntity<Feedback> criar(@RequestBody @Valid FeedbackRequest dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(feedbackService.criar(dto));
+    public ResponseEntity<FeedbackResponse> criar(@RequestBody @Valid FeedbackRequest dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(FeedbackResponse.fromEntity(feedbackService.criar(dto)));
     }
 
     @GetMapping("/projeto/{id}")
-    public ResponseEntity<List<Feedback>> listarPorProjeto(@PathVariable Integer id) {
-        return ResponseEntity.ok(feedbackService.listarPorProjeto(id));
+    public ResponseEntity<List<FeedbackResponse>> listarPorProjeto(@PathVariable Integer id) {
+        return ResponseEntity.ok(
+                feedbackService.listarPorProjeto(id).stream()
+                        .map(FeedbackResponse::fromEntity)
+                        .toList()
+        );
     }
 
     @GetMapping("/usuario/{id}")
-    public ResponseEntity<List<Feedback>> listarPorUsuario(@PathVariable Integer id) {
-        return ResponseEntity.ok(feedbackService.listarPorUsuario(id));
+    public ResponseEntity<List<FeedbackResponse>> listarPorUsuario(@PathVariable Integer id) {
+        return ResponseEntity.ok(
+                feedbackService.listarPorUsuario(id).stream()
+                        .map(FeedbackResponse::fromEntity)
+                        .toList()
+        );
     }
 }
 
