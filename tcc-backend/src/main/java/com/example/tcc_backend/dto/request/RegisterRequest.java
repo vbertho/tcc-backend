@@ -1,34 +1,27 @@
 package com.example.tcc_backend.dto.request;
 
-import com.example.tcc_backend.model.TipoUsuario;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 public class RegisterRequest {
 
-    @NotBlank(message = "Nome é obrigatório")
+    @NotBlank(message = "Nome obrigatorio")
+    @Size(max = 120, message = "Nome deve ter no maximo 120 caracteres")
     private String nome;
 
-    @NotBlank(message = "Email é obrigatório")
-    @Email(message = "Email inválido")
+    @NotBlank(message = "Email obrigatorio")
+    @Email(message = "Email invalido")
+    @Size(max = 120, message = "Email deve ter no maximo 120 caracteres")
     private String email;
 
-    @NotBlank(message = "Senha é obrigatória")
-    @Size(min = 8, message = "Senha deve ter no mínimo 8 caracteres")
+    @NotBlank(message = "Senha obrigatoria")
+    @Size(min = 8, max = 72, message = "Senha deve ter entre 8 e 72 caracteres")
     private String senha;
 
-    @NotNull(message = "Tipo é obrigatório")
-    private TipoUsuario tipo;
-
-    // aluno
+    @NotBlank(message = "RA obrigatorio")
+    @Size(max = 30, message = "RA deve ter no maximo 30 caracteres")
     private String ra;
-    private Integer cursoId;
-
-    // orientador
-    private String departamento;
-    private String titulacao;
 }

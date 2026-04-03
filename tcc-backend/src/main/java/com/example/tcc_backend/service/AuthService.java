@@ -40,24 +40,17 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest dto) {
-        if (dto.getTipo() != TipoUsuario.ALUNO) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "Cadastro publico disponivel apenas para alunos"
-            );
-        }
+        String nome = dto.getNome().trim();
+        String email = dto.getEmail().trim().toLowerCase();
+        String ra = dto.getRa().trim();
 
-        if (dto.getRa() == null || dto.getRa().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "RA obrigatorio para cadastro de aluno");
-        }
-
-        if (usuarioRepository.existsByEmail(dto.getEmail())) {
+        if (usuarioRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email ja cadastrado");
         }
 
         Usuario usuario = Usuario.builder()
-                .nome(dto.getNome())
-                .email(dto.getEmail())
+                .nome(nome)
+                .email(email)
                 .senha(passwordEncoder.encode(dto.getSenha()))
                 .tipo(TipoUsuario.ALUNO)
                 .build();
@@ -66,7 +59,7 @@ public class AuthService {
 
         Aluno aluno = Aluno.builder()
                 .usuario(usuario)
-                .ra(dto.getRa())
+                .ra(ra)
                 .build();
         alunoRepository.save(aluno);
 
