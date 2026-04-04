@@ -1,6 +1,7 @@
 package com.example.tcc_backend.support;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -15,9 +16,14 @@ public final class ControllerTestSupport {
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
         validator.afterPropertiesSet();
 
+        ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+
         return MockMvcBuilders.standaloneSetup(controller)
                 .setValidator(validator)
-                .setMessageConverters(new MappingJackson2HttpMessageConverter(new ObjectMapper()))
+                .setMessageConverters(
+                        new StringHttpMessageConverter(),
+                        new MappingJackson2HttpMessageConverter(objectMapper)
+                )
                 .build();
     }
 }
