@@ -116,4 +116,33 @@ public final class TestDataFactory {
                 .dataRegistro(LocalDateTime.now())
                 .build();
     }
+
+    public static Notificacao notificacao(Integer id, Usuario usuario) {
+        return Notificacao.builder()
+                .id(id)
+                .usuario(usuario)
+                .mensagem("Nova notificacao")
+                .tipo(TipoNotificacao.MENSAGEM_RECEBIDA)
+                .lida(false)
+                .dataCriacao(LocalDateTime.now())
+                .build();
+    }
+
+    public static Conversa conversa(Integer id, Projeto projeto) {
+        return Conversa.builder()
+                .id(id)
+                .projeto(projeto)
+                .dataCriacao(LocalDateTime.now())
+                .build();
+    }
+
+    public static Mensagem mensagem(Integer id, Conversa conversa, Usuario remetente) {
+        return Mensagem.builder()
+                .id(id)
+                .conversa(conversa)
+                .remetente(remetente)
+                .conteudo("Mensagem de teste")
+                .dataEnvio(LocalDateTime.now())
+                .build();
+    }
 }

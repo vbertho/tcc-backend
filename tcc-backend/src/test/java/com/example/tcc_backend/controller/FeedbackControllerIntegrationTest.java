@@ -76,4 +76,20 @@ class FeedbackControllerIntegrationTest {
                 .andExpect(jsonPath("$[0].id").value(1))
                 .andExpect(jsonPath("$[0].nota").value(5));
     }
+
+    @Test
+    void listarPorUsuarioDeveRetornarLista() throws Exception {
+        Feedback feedback = TestDataFactory.feedback(
+                2,
+                TestDataFactory.projetoComOrientador(11, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2))),
+                TestDataFactory.usuarioAluno(1)
+        );
+
+        when(feedbackService.listarPorUsuario(1)).thenReturn(List.of(feedback));
+
+        mockMvc.perform(get("/api/feedback/usuario/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(2))
+                .andExpect(jsonPath("$[0].avaliadorId").value(1));
+    }
 }
