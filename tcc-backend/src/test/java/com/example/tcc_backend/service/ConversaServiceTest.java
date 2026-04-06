@@ -124,7 +124,23 @@ class ConversaServiceTest {
         Mensagem enviada = conversaService.enviarMensagem(5, "Ola equipe");
 
         assertThat(enviada.getConteudo()).isEqualTo("Ola equipe");
-        verify(notificacaoService).criarNotificacao(2, "Nova mensagem em conversa do projeto", TipoNotificacao.MENSAGEM_RECEBIDA);
-        verify(notificacaoService).criarNotificacao(3, "Nova mensagem em conversa do projeto", TipoNotificacao.MENSAGEM_RECEBIDA);
+        verify(notificacaoService).criarNotificacao(
+                2,
+                "Nova mensagem em conversa do projeto",
+                TipoNotificacao.MENSAGEM_RECEBIDA,
+                "CONVERSA",
+                5,
+                "/conversas/5",
+                "Projeto 10"
+        );
+        verify(notificacaoService).criarNotificacao(
+                3,
+                "Nova mensagem em conversa do projeto",
+                TipoNotificacao.MENSAGEM_RECEBIDA,
+                "CONVERSA",
+                5,
+                "/conversas/5",
+                "Projeto 10"
+        );
     }
 }

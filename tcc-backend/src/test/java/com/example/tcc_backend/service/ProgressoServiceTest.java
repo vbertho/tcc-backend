@@ -61,7 +61,11 @@ class ProgressoServiceTest {
 
         assertThat(progresso.getAutor()).isEqualTo(alunoUsuario);
         assertThat(progresso.getDescricao()).isEqualTo("Primeira entrega");
-        verify(notificacaoService).criarNotificacao(2, "Novo progresso registrado no projeto", TipoNotificacao.PROGRESSO_REGISTRADO);
+        verify(notificacaoService).criarNotificacao(
+                2,
+                "Novo progresso registrado no projeto",
+                TipoNotificacao.PROGRESSO_REGISTRADO
+        );
     }
 
     @Test

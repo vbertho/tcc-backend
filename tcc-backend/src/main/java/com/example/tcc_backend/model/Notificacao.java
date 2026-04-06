@@ -34,6 +34,18 @@ public class Notificacao {
     @Column(name = "tipo", nullable = false)
     private TipoNotificacao tipo;
 
+    @Column(name = "entidade_relacionada", length = 50)
+    private String entidadeRelacionada;
+
+    @Column(name = "id_entidade_relacionada")
+    private Integer entidadeId;
+
+    @Column(name = "rota_sugerida", length = 255)
+    private String rotaSugerida;
+
+    @Column(name = "payload_resumo", columnDefinition = "TEXT")
+    private String payloadResumo;
+
     @Column(name = "lida")
     private Boolean lida;
 

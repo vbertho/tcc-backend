@@ -30,6 +30,13 @@ public class Documento {
     @Column(name = "tipo", nullable = false)
     private TipoDocumento tipo;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private StatusDocumento status;
+
+    @Column(name = "observacao_status", columnDefinition = "TEXT")
+    private String observacaoStatus;
+
     @NotBlank
     @Column(name = "caminho", nullable = false, length = 500)
     private String caminho;
@@ -40,5 +47,8 @@ public class Documento {
     @PrePersist
     public void prePersist() {
         this.dataEnvio = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = StatusDocumento.ENVIADO;
+        }
     }
 }

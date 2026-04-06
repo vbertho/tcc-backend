@@ -58,7 +58,15 @@ class InscricaoServiceTest {
         Inscricao inscricao = inscricaoService.create(request);
 
         assertThat(inscricao.getAluno()).isEqualTo(aluno);
-        verify(notificacaoService).criarNotificacao(2, "Nova inscricao recebida no projeto Projeto 10", TipoNotificacao.INSCRICAO_RECEBIDA);
+        verify(notificacaoService).criarNotificacao(
+                2,
+                "Nova inscricao recebida no projeto Projeto 10",
+                TipoNotificacao.INSCRICAO_RECEBIDA,
+                "INSCRICAO",
+                null,
+                "/projetos/10/inscricoes",
+                "Projeto 10"
+        );
     }
 
     @Test
@@ -104,7 +112,15 @@ class InscricaoServiceTest {
         Inscricao aprovada = inscricaoService.aprovar(5);
 
         assertThat(aprovada.getStatus()).isEqualTo(StatusInscricao.APROVADO);
-        verify(notificacaoService).criarNotificacao(1, "Sua inscricao foi aprovada", TipoNotificacao.INSCRICAO_APROVADA);
+        verify(notificacaoService).criarNotificacao(
+                1,
+                "Sua inscricao foi aprovada",
+                TipoNotificacao.INSCRICAO_APROVADA,
+                "INSCRICAO",
+                5,
+                "/usuarios/me/inscricoes",
+                "Projeto 10"
+        );
     }
 
     @Test
@@ -122,7 +138,15 @@ class InscricaoServiceTest {
         Inscricao rejeitada = inscricaoService.rejeitar(5);
 
         assertThat(rejeitada.getStatus()).isEqualTo(StatusInscricao.REJEITADO);
-        verify(notificacaoService).criarNotificacao(1, "Sua inscricao foi rejeitada", TipoNotificacao.INSCRICAO_REJEITADA);
+        verify(notificacaoService).criarNotificacao(
+                1,
+                "Sua inscricao foi rejeitada",
+                TipoNotificacao.INSCRICAO_REJEITADA,
+                "INSCRICAO",
+                5,
+                "/usuarios/me/inscricoes",
+                "Projeto 10"
+        );
     }
 
     @Test

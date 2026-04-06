@@ -1,12 +1,20 @@
 package com.example.tcc_backend.service;
 
-import com.example.tcc_backend.model.*;
+import com.example.tcc_backend.model.Conversa;
+import com.example.tcc_backend.model.Inscricao;
+import com.example.tcc_backend.model.Mensagem;
+import com.example.tcc_backend.model.Projeto;
+import com.example.tcc_backend.model.StatusInscricao;
+import com.example.tcc_backend.model.TipoNotificacao;
+import com.example.tcc_backend.model.Usuario;
 import com.example.tcc_backend.repository.ConversaRepository;
 import com.example.tcc_backend.repository.InscricaoRepository;
 import com.example.tcc_backend.repository.MensagemRepository;
 import com.example.tcc_backend.repository.ProjetoRepository;
 import com.example.tcc_backend.security.AuthHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,15 +36,26 @@ public class ConversaService {
     private final NotificacaoService notificacaoService;
 
     public Conversa criar(Integer projetoId) {
+        return abrirOuCriarPorProjeto(projetoId);
+    }
+
+    public Conversa abrirOuCriarPorProjeto(Integer projetoId) {
         Usuario usuarioLogado = authHelper.getCurrentUser();
         Projeto projeto = projetoRepository.findById(projetoId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nao encontrado"));
         validarParticipacaoProjeto(projeto, usuarioLogado.getId());
 
-        Conversa conversa = Conversa.builder()
-                .projeto(projeto)
-                .build();
-        return conversaRepository.save(conversa);
+        return conversaRepository.findByProjetoId(projetoId)
+                .orElseGet(() -> conversaRepository.save(Conversa.builder().projeto(projeto).build()));
+    }
+
+    public Conversa buscarPorProjeto(Integer projetoId) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        Projeto projeto = projetoRepository.findById(projetoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nao encontrado"));
+        validarParticipacaoProjeto(projeto, usuarioLogado.getId());
+        return conversaRepository.findByProjetoId(projetoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversa nao encontrada para este projeto"));
     }
 
     public List<Conversa> listarConversasDoUsuario(Integer usuarioId) {
@@ -58,12 +77,28 @@ public class ConversaService {
         return new ArrayList<>(conversas);
     }
 
+    public Page<Conversa> listarConversasDoUsuario(Integer usuarioId, Pageable pageable) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        if (!usuarioLogado.getId().equals(usuarioId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para listar conversas de outro usuario");
+        }
+        return conversaRepository.findByProjetoOrientadorUsuarioIdOrProjetoAlunoCriadorUsuarioId(usuarioId, usuarioId, pageable);
+    }
+
     public List<Mensagem> listarMensagens(Integer conversaId) {
         Usuario usuarioLogado = authHelper.getCurrentUser();
         Conversa conversa = conversaRepository.findById(conversaId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversa nao encontrada"));
         validarParticipacaoProjeto(conversa.getProjeto(), usuarioLogado.getId());
         return mensagemRepository.findByConversaIdOrderByDataEnvioAsc(conversaId);
+    }
+
+    public Page<Mensagem> listarMensagens(Integer conversaId, Pageable pageable) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        Conversa conversa = conversaRepository.findById(conversaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversa nao encontrada"));
+        validarParticipacaoProjeto(conversa.getProjeto(), usuarioLogado.getId());
+        return mensagemRepository.findByConversaIdOrderByDataEnvioAsc(conversaId, pageable);
     }
 
     public Mensagem enviarMensagem(Integer conversaId, String conteudo) {
@@ -83,13 +118,29 @@ public class ConversaService {
         if (projeto.getOrientador() != null) {
             Integer orientadorUsuarioId = projeto.getOrientador().getUsuario().getId();
             if (!orientadorUsuarioId.equals(usuarioLogado.getId())) {
-                notificacaoService.criarNotificacao(orientadorUsuarioId, "Nova mensagem em conversa do projeto", TipoNotificacao.MENSAGEM_RECEBIDA);
+                notificacaoService.criarNotificacao(
+                        orientadorUsuarioId,
+                        "Nova mensagem em conversa do projeto",
+                        TipoNotificacao.MENSAGEM_RECEBIDA,
+                        "CONVERSA",
+                        conversa.getId(),
+                        "/conversas/" + conversa.getId(),
+                        projeto.getTitulo()
+                );
             }
         }
         if (projeto.getAlunoCriador() != null) {
             Integer alunoCriadorUsuarioId = projeto.getAlunoCriador().getUsuario().getId();
             if (!alunoCriadorUsuarioId.equals(usuarioLogado.getId())) {
-                notificacaoService.criarNotificacao(alunoCriadorUsuarioId, "Nova mensagem em conversa do projeto", TipoNotificacao.MENSAGEM_RECEBIDA);
+                notificacaoService.criarNotificacao(
+                        alunoCriadorUsuarioId,
+                        "Nova mensagem em conversa do projeto",
+                        TipoNotificacao.MENSAGEM_RECEBIDA,
+                        "CONVERSA",
+                        conversa.getId(),
+                        "/conversas/" + conversa.getId(),
+                        projeto.getTitulo()
+                );
             }
         }
 

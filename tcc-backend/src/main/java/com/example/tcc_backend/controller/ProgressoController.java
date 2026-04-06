@@ -1,10 +1,14 @@
 package com.example.tcc_backend.controller;
 
 import com.example.tcc_backend.dto.request.ProgressoRequest;
+import com.example.tcc_backend.dto.response.PageResponse;
 import com.example.tcc_backend.dto.response.ProgressoResponse;
 import com.example.tcc_backend.service.ProgressoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +36,18 @@ public class ProgressoController {
                         .map(ProgressoResponse::fromEntity)
                         .toList()
         );
+    }
+
+    @GetMapping("/projetos/{id}/progresso/pagina")
+    public ResponseEntity<PageResponse<ProgressoResponse>> listarPorProjetoPaginado(@PathVariable Integer id,
+                                                                                    @RequestParam(defaultValue = "0") int page,
+                                                                                    @RequestParam(defaultValue = "10") int size) {
+        List<ProgressoResponse> content = progressoService.listarPorProjeto(id).stream()
+                .map(ProgressoResponse::fromEntity)
+                .toList();
+        int start = Math.min(page * size, content.size());
+        int end = Math.min(start + size, content.size());
+        return ResponseEntity.ok(PageResponse.from(new PageImpl<>(content.subList(start, end), PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "dataRegistro")), content.size())));
     }
 
     @PutMapping("/progresso/{id}")

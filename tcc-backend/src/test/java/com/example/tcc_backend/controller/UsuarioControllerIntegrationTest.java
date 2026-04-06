@@ -154,7 +154,7 @@ class UsuarioControllerIntegrationTest {
         mockMvc.perform(get("/api/usuarios/minhas-inscricoes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(6))
-                .andExpect(jsonPath("$[0].projeto.id").value(10));
+                .andExpect(jsonPath("$[0].projetoId").value(10));
     }
 
     @Test

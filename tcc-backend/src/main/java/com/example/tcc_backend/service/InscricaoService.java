@@ -1,13 +1,23 @@
 package com.example.tcc_backend.service;
 
+import com.example.tcc_backend.dto.request.InscricaoAvaliacaoRequest;
 import com.example.tcc_backend.dto.request.InscricaoRequest;
-import com.example.tcc_backend.model.*;
+import com.example.tcc_backend.model.Aluno;
+import com.example.tcc_backend.model.Inscricao;
+import com.example.tcc_backend.model.Projeto;
+import com.example.tcc_backend.model.StatusInscricao;
+import com.example.tcc_backend.model.StatusProjeto;
+import com.example.tcc_backend.model.TipoNotificacao;
+import com.example.tcc_backend.model.TipoUsuario;
+import com.example.tcc_backend.model.Usuario;
 import com.example.tcc_backend.repository.AlunoRepository;
 import com.example.tcc_backend.repository.InscricaoRepository;
 import com.example.tcc_backend.repository.ProjetoRepository;
 import com.example.tcc_backend.security.AuthHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,6 +38,10 @@ public class InscricaoService {
         return inscricaoRepository.findAll();
     }
 
+    public Page<Inscricao> findAll(Pageable pageable) {
+        return inscricaoRepository.findAll(pageable);
+    }
+
     public Inscricao findById(Integer id) {
         return inscricaoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inscricao nao encontrada"));
@@ -35,6 +49,10 @@ public class InscricaoService {
 
     public List<Inscricao> findByProjeto(Integer projetoId) {
         return inscricaoRepository.findByProjetoId(projetoId);
+    }
+
+    public Page<Inscricao> findByProjeto(Integer projetoId, Pageable pageable) {
+        return inscricaoRepository.findByProjetoId(projetoId, pageable);
     }
 
     public Inscricao create(InscricaoRequest dto) {
@@ -61,6 +79,7 @@ public class InscricaoService {
         Inscricao inscricao = Inscricao.builder()
                 .aluno(aluno)
                 .projeto(projeto)
+                .motivacao(normalizarTexto(dto.getMotivacao()))
                 .build();
 
         try {
@@ -69,7 +88,11 @@ public class InscricaoService {
                 notificacaoService.criarNotificacao(
                         projeto.getOrientador().getUsuario().getId(),
                         "Nova inscricao recebida no projeto " + projeto.getTitulo(),
-                        TipoNotificacao.INSCRICAO_RECEBIDA
+                        TipoNotificacao.INSCRICAO_RECEBIDA,
+                        "INSCRICAO",
+                        salva.getId(),
+                        "/projetos/" + projeto.getId() + "/inscricoes",
+                        projeto.getTitulo()
                 );
             }
             return salva;
@@ -79,43 +102,49 @@ public class InscricaoService {
     }
 
     public Inscricao aprovar(Integer id) {
+        return aprovar(id, null);
+    }
+
+    public Inscricao aprovar(Integer id, InscricaoAvaliacaoRequest dto) {
         Inscricao inscricao = findById(id);
         validarOrientador(inscricao);
 
-        Inscricao atualizada = Inscricao.builder()
-                .id(inscricao.getId())
-                .aluno(inscricao.getAluno())
-                .projeto(inscricao.getProjeto())
-                .status(StatusInscricao.APROVADO)
-                .dataInscricao(inscricao.getDataInscricao())
-                .build();
+        inscricao.setStatus(StatusInscricao.APROVADO);
+        inscricao.setParecerOrientador(dto != null ? normalizarTexto(dto.getParecerOrientador()) : inscricao.getParecerOrientador());
 
-        Inscricao salva = inscricaoRepository.save(atualizada);
+        Inscricao salva = inscricaoRepository.save(inscricao);
         notificacaoService.criarNotificacao(
                 inscricao.getAluno().getUsuario().getId(),
                 "Sua inscricao foi aprovada",
-                TipoNotificacao.INSCRICAO_APROVADA
+                TipoNotificacao.INSCRICAO_APROVADA,
+                "INSCRICAO",
+                inscricao.getId(),
+                "/usuarios/me/inscricoes",
+                inscricao.getProjeto().getTitulo()
         );
         return salva;
     }
 
     public Inscricao rejeitar(Integer id) {
+        return rejeitar(id, null);
+    }
+
+    public Inscricao rejeitar(Integer id, InscricaoAvaliacaoRequest dto) {
         Inscricao inscricao = findById(id);
         validarOrientador(inscricao);
 
-        Inscricao atualizada = Inscricao.builder()
-                .id(inscricao.getId())
-                .aluno(inscricao.getAluno())
-                .projeto(inscricao.getProjeto())
-                .status(StatusInscricao.REJEITADO)
-                .dataInscricao(inscricao.getDataInscricao())
-                .build();
+        inscricao.setStatus(StatusInscricao.REJEITADO);
+        inscricao.setParecerOrientador(dto != null ? normalizarTexto(dto.getParecerOrientador()) : inscricao.getParecerOrientador());
 
-        Inscricao salva = inscricaoRepository.save(atualizada);
+        Inscricao salva = inscricaoRepository.save(inscricao);
         notificacaoService.criarNotificacao(
                 inscricao.getAluno().getUsuario().getId(),
                 "Sua inscricao foi rejeitada",
-                TipoNotificacao.INSCRICAO_REJEITADA
+                TipoNotificacao.INSCRICAO_REJEITADA,
+                "INSCRICAO",
+                inscricao.getId(),
+                "/usuarios/me/inscricoes",
+                inscricao.getProjeto().getTitulo()
         );
         return salva;
     }
@@ -131,6 +160,10 @@ public class InscricaoService {
         inscricaoRepository.delete(inscricao);
     }
 
+    public void cancelarMinha(Integer id) {
+        cancel(id);
+    }
+
     public Inscricao update(Integer id, InscricaoRequest dto) {
         Usuario usuarioLogado = authHelper.getCurrentUser();
         Inscricao inscricao = findById(id);
@@ -142,15 +175,9 @@ public class InscricaoService {
         Projeto projeto = projetoRepository.findById(dto.getProjetoId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nao encontrado"));
 
-        Inscricao atualizada = Inscricao.builder()
-                .id(inscricao.getId())
-                .aluno(inscricao.getAluno())
-                .projeto(projeto)
-                .status(inscricao.getStatus())
-                .dataInscricao(inscricao.getDataInscricao())
-                .build();
-
-        return inscricaoRepository.save(atualizada);
+        inscricao.setProjeto(projeto);
+        inscricao.setMotivacao(normalizarTexto(dto.getMotivacao()));
+        return inscricaoRepository.save(inscricao);
     }
 
     private void validarOrientador(Inscricao inscricao) {
@@ -167,5 +194,12 @@ public class InscricaoService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Voce nao e o orientador deste projeto");
         }
     }
-}
 
+    private String normalizarTexto(String valor) {
+        if (valor == null) {
+            return null;
+        }
+        String normalizado = valor.trim();
+        return normalizado.isEmpty() ? null : normalizado;
+    }
+}

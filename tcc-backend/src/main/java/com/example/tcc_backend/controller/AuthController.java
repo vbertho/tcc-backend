@@ -1,5 +1,6 @@
 package com.example.tcc_backend.controller;
 
+import com.example.tcc_backend.dto.request.ChangePasswordRequest;
 import com.example.tcc_backend.dto.request.LoginRequest;
 import com.example.tcc_backend.dto.request.RegisterRequest;
 import com.example.tcc_backend.dto.response.AuthResponse;
@@ -26,6 +27,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody @Valid LoginRequest dto) {
         return ResponseEntity.ok(service.login(dto));
+    }
+
+    @PutMapping("/senha")
+    public ResponseEntity<Void> changePassword(@RequestBody @Valid ChangePasswordRequest dto) {
+        service.changePassword(dto);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/logout")

@@ -1,10 +1,13 @@
 package com.example.tcc_backend.service;
 
 import com.example.tcc_backend.dto.request.UsuarioRequest;
+import com.example.tcc_backend.dto.request.UsuarioPreferenciasRequest;
+import com.example.tcc_backend.dto.response.UsuarioProfileResponse;
+import com.example.tcc_backend.model.Curso;
 import com.example.tcc_backend.model.Inscricao;
-import com.example.tcc_backend.model.TipoUsuario;
 import com.example.tcc_backend.model.Usuario;
 import com.example.tcc_backend.repository.AlunoRepository;
+import com.example.tcc_backend.repository.CursoRepository;
 import com.example.tcc_backend.repository.InscricaoRepository;
 import com.example.tcc_backend.repository.OrientadorRepository;
 import com.example.tcc_backend.repository.ProjetoRepository;
@@ -38,6 +41,8 @@ class UsuarioServiceTest {
     private AlunoRepository alunoRepository;
     @Mock
     private OrientadorRepository orientadorRepository;
+    @Mock
+    private CursoRepository cursoRepository;
     @Mock
     private ProjetoRepository projetoRepository;
     @Mock
@@ -82,21 +87,72 @@ class UsuarioServiceTest {
     }
 
     @Test
-    void updateDeveSalvarAlteracoesDoProprioUsuario() {
+    void updateDeveSalvarAlteracoesDoProprioAluno() {
         Usuario usuario = TestDataFactory.usuarioAluno(1);
+        var aluno = TestDataFactory.aluno(1, usuario);
+        Curso curso = Curso.builder().id(5).nome("ADS").build();
         UsuarioRequest request = UsuarioRequest.builder()
                 .nome("Novo Nome")
                 .email("novo@teste.com")
+                .instituicao("FATEC")
+                .bio("Bio")
+                .semestre(4)
+                .cursoId(5)
+                .interesses("IA")
                 .build();
 
         when(authHelper.getCurrentUser()).thenReturn(usuario);
         when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario));
+        when(alunoRepository.findByUsuarioId(1)).thenReturn(Optional.of(aluno));
+        when(cursoRepository.findById(5)).thenReturn(Optional.of(curso));
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Usuario atualizado = usuarioService.update(1, request);
 
         assertThat(atualizado.getNome()).isEqualTo("Novo Nome");
         assertThat(atualizado.getEmail()).isEqualTo("novo@teste.com");
+        assertThat(atualizado.getInstituicao()).isEqualTo("FATEC");
+        verify(alunoRepository).save(any());
+    }
+
+    @Test
+    void meDeveRetornarPerfilCompletoDoAluno() {
+        Usuario usuario = TestDataFactory.usuarioAluno(1);
+        Curso curso = Curso.builder().id(5).nome("ADS").build();
+        var aluno = TestDataFactory.aluno(1, usuario);
+        aluno.setCurso(curso);
+        aluno.setSemestre(4);
+        aluno.setInteresses("IA");
+        usuario.setTema("escuro");
+        usuario.setNotificacoesAtivas(true);
+
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+        when(alunoRepository.findByUsuarioId(1)).thenReturn(Optional.of(aluno));
+        when(orientadorRepository.findByUsuarioId(1)).thenReturn(Optional.empty());
+
+        UsuarioProfileResponse profile = usuarioService.me();
+
+        assertThat(profile.getId()).isEqualTo(1);
+        assertThat(profile.getCursoNome()).isEqualTo("ADS");
+        assertThat(profile.getTema()).isEqualTo("escuro");
+    }
+
+    @Test
+    void updatePreferenciasDevePersistirTemaENotificacoes() {
+        Usuario usuario = TestDataFactory.usuarioAluno(1);
+        UsuarioPreferenciasRequest request = new UsuarioPreferenciasRequest();
+        request.setTema("claro");
+        request.setNotificacoesAtivas(false);
+
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(alunoRepository.findByUsuarioId(1)).thenReturn(Optional.empty());
+        when(orientadorRepository.findByUsuarioId(1)).thenReturn(Optional.empty());
+
+        UsuarioProfileResponse profile = usuarioService.updatePreferencias(request);
+
+        assertThat(profile.getTema()).isEqualTo("claro");
+        assertThat(profile.getNotificacoesAtivas()).isFalse();
     }
 
     @Test

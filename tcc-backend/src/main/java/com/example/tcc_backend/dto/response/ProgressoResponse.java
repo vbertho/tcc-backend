@@ -1,6 +1,7 @@
 package com.example.tcc_backend.dto.response;
 
 import com.example.tcc_backend.model.Progresso;
+import com.example.tcc_backend.model.TipoProgresso;
 import lombok.Builder;
 import lombok.Data;
 
@@ -11,7 +12,11 @@ import java.time.LocalDateTime;
 public class ProgressoResponse {
     private Integer id;
     private Integer projetoId;
+    private String titulo;
+    private TipoProgresso tipo;
+    private String fase;
     private String descricao;
+    private String metadataJson;
     private LocalDateTime dataRegistro;
     private Integer autorId;
     private String autorNome;
@@ -20,7 +25,11 @@ public class ProgressoResponse {
         return ProgressoResponse.builder()
                 .id(progresso.getId())
                 .projetoId(progresso.getProjeto().getId())
+                .titulo(progresso.getTitulo())
+                .tipo(progresso.getTipo())
+                .fase(progresso.getFase())
                 .descricao(progresso.getDescricao())
+                .metadataJson(progresso.getMetadataJson())
                 .dataRegistro(progresso.getDataRegistro())
                 .autorId(progresso.getAutor() != null ? progresso.getAutor().getId() : null)
                 .autorNome(progresso.getAutor() != null ? progresso.getAutor().getNome() : null)

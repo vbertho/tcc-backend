@@ -115,7 +115,15 @@ class ProjetoServiceTest {
         Inscricao inscricao = projetoService.recrutar(10, 3);
 
         assertThat(inscricao.getStatus()).isEqualTo(StatusInscricao.APROVADO);
-        verify(notificacaoService).criarNotificacao(3, "Voce foi recrutado para um projeto", TipoNotificacao.INSCRICAO_APROVADA);
+        verify(notificacaoService).criarNotificacao(
+                3,
+                "Voce foi recrutado para um projeto",
+                TipoNotificacao.INSCRICAO_APROVADA,
+                "PROJETO",
+                10,
+                "/projetos/10",
+                "Projeto 10"
+        );
     }
 
     @Test

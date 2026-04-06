@@ -11,6 +11,8 @@ import com.example.tcc_backend.repository.InscricaoRepository;
 import com.example.tcc_backend.repository.ProjetoRepository;
 import com.example.tcc_backend.security.AuthHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -52,8 +54,16 @@ public class FeedbackService {
         return feedbackRepository.findByProjetoId(projetoId);
     }
 
+    public Page<Feedback> listarPorProjeto(Integer projetoId, Pageable pageable) {
+        return feedbackRepository.findByProjetoId(projetoId, pageable);
+    }
+
     public List<Feedback> listarPorUsuario(Integer usuarioId) {
         return feedbackRepository.findByProjetoOrientadorUsuarioIdOrProjetoAlunoCriadorUsuarioId(usuarioId, usuarioId);
+    }
+
+    public Page<Feedback> listarPorUsuario(Integer usuarioId, Pageable pageable) {
+        return feedbackRepository.findByProjetoOrientadorUsuarioIdOrProjetoAlunoCriadorUsuarioId(usuarioId, usuarioId, pageable);
     }
 
     private void validarPermissaoParaAvaliar(Projeto projeto, Usuario usuarioLogado) {

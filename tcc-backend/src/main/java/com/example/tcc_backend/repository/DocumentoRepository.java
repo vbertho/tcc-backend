@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface DocumentoRepository extends JpaRepository<Documento, Integer> {
     List<Documento> findByUsuarioId(Integer usuarioId);
+    long countByUsuarioId(Integer usuarioId);
 }

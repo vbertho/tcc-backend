@@ -31,9 +31,22 @@ public class Progresso {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Usuario autor;
 
+    @Column(name = "titulo", length = 150)
+    private String titulo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", nullable = false)
+    private TipoProgresso tipo;
+
+    @Column(name = "fase", length = 100)
+    private String fase;
+
     @NotBlank
     @Column(name = "descricao", nullable = false, columnDefinition = "TEXT")
     private String descricao;
+
+    @Column(name = "metadata_json", columnDefinition = "TEXT")
+    private String metadataJson;
 
     @Column(name = "data_registro")
     private LocalDateTime dataRegistro;
@@ -41,5 +54,8 @@ public class Progresso {
     @PrePersist
     public void prePersist() {
         this.dataRegistro = LocalDateTime.now();
+        if (this.tipo == null) {
+            this.tipo = TipoProgresso.ATUALIZACAO;
+        }
     }
 }

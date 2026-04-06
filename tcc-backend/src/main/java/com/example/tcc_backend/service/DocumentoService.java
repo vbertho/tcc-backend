@@ -1,6 +1,7 @@
 package com.example.tcc_backend.service;
 
 import com.example.tcc_backend.model.Documento;
+import com.example.tcc_backend.model.StatusDocumento;
 import com.example.tcc_backend.model.TipoDocumento;
 import com.example.tcc_backend.model.Usuario;
 import com.example.tcc_backend.repository.DocumentoRepository;
@@ -50,6 +51,7 @@ public class DocumentoService {
         Documento documento = Documento.builder()
                 .usuario(usuarioLogado)
                 .tipo(tipo)
+                .status(StatusDocumento.ENVIADO)
                 .caminho(caminho)
                 .build();
         return documentoRepository.save(documento);
@@ -67,16 +69,30 @@ public class DocumentoService {
     }
 
     public void remover(Integer id) {
+        Documento documento = buscarDocumentoDoUsuario(id);
+
+        apagarArquivo(documento.getCaminho());
+        documentoRepository.delete(documento);
+    }
+
+    public Documento buscarDocumentoDoUsuario(Integer id) {
         Usuario usuarioLogado = authHelper.getCurrentUser();
         Documento documento = documentoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento nao encontrado"));
 
         if (!documento.getUsuario().getId().equals(usuarioLogado.getId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para remover este documento");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para acessar este documento");
         }
+        return documento;
+    }
 
-        apagarArquivo(documento.getCaminho());
-        documentoRepository.delete(documento);
+    public Path obterArquivo(Integer id) {
+        Documento documento = buscarDocumentoDoUsuario(id);
+        Path caminho = Path.of(documento.getCaminho());
+        if (!Files.exists(caminho)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo do documento nao encontrado");
+        }
+        return caminho;
     }
 
     private String salvarArquivo(Usuario usuario, MultipartFile arquivo) {

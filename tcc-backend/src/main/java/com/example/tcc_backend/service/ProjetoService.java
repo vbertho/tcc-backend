@@ -10,6 +10,8 @@ import com.example.tcc_backend.repository.ProjetoRepository;
 import com.example.tcc_backend.repository.UsuarioRepository;
 import com.example.tcc_backend.security.AuthHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -35,6 +37,10 @@ public class ProjetoService {
         return projetoRepository.findAll();
     }
 
+    public Page<Projeto> findAll(Pageable pageable) {
+        return projetoRepository.findAll(pageable);
+    }
+
     public Projeto findById(Integer id) {
         return projetoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Projeto nao encontrado"));
@@ -44,20 +50,49 @@ public class ProjetoService {
         return projetoRepository.findByStatus(status);
     }
 
+    public Page<Projeto> findByStatus(StatusProjeto status, Pageable pageable) {
+        return projetoRepository.findByStatus(status, pageable);
+    }
+
     public List<Projeto> findByArea(Integer areaId) {
         return projetoRepository.findByAreaId(areaId);
+    }
+
+    public Page<Projeto> findByArea(Integer areaId, Pageable pageable) {
+        return projetoRepository.findByAreaId(areaId, pageable);
     }
 
     public List<Projeto> findByAreaNome(String area) {
         return projetoRepository.findByAreaNomeContainingIgnoreCase(area);
     }
 
+    public Page<Projeto> findByAreaNome(String area, Pageable pageable) {
+        return projetoRepository.findByAreaNomeContainingIgnoreCase(area, pageable);
+    }
+
     public List<Projeto> findByCursoNome(String curso) {
         return projetoRepository.findByAreaCursoNomeContainingIgnoreCase(curso);
     }
 
+    public Page<Projeto> findByCursoNome(String curso, Pageable pageable) {
+        return projetoRepository.findByAreaCursoNomeContainingIgnoreCase(curso, pageable);
+    }
+
     public List<Projeto> findByBusca(String busca) {
         return projetoRepository.findByTituloContainingIgnoreCase(busca);
+    }
+
+    public Page<Projeto> findByBusca(String busca, Pageable pageable) {
+        return projetoRepository.findByTituloContainingIgnoreCase(busca, pageable);
+    }
+
+    public Page<Projeto> findMeusProjetos(Pageable pageable) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        return projetoRepository.findByOrientadorUsuarioIdOrAlunoCriadorUsuarioId(
+                usuarioLogado.getId(),
+                usuarioLogado.getId(),
+                pageable
+        );
     }
 
     public Projeto create(ProjetoRequest dto) {
@@ -182,7 +217,15 @@ public class ProjetoService {
         }
 
         Inscricao salva = inscricaoRepository.save(inscricao);
-        notificacaoService.criarNotificacao(usuarioId, "Voce foi recrutado para um projeto", TipoNotificacao.INSCRICAO_APROVADA);
+        notificacaoService.criarNotificacao(
+                usuarioId,
+                "Voce foi recrutado para um projeto",
+                TipoNotificacao.INSCRICAO_APROVADA,
+                "PROJETO",
+                projetoId,
+                "/projetos/" + projetoId,
+                projeto.getTitulo()
+        );
         return salva;
     }
 

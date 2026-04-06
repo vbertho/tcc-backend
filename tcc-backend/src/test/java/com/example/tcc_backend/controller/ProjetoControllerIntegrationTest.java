@@ -204,10 +204,10 @@ class ProjetoControllerIntegrationTest {
 
         mockMvc.perform(post("/api/projetos/20/recrutar")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(30))
-                .andExpect(jsonPath("$.aluno.id").value(3));
+                .andExpect(jsonPath("$.alunoId").value(3));
     }
 
     @Test

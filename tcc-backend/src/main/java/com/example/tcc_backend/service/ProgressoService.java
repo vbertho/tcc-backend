@@ -32,7 +32,11 @@ public class ProgressoService {
         Progresso progresso = Progresso.builder()
                 .projeto(projeto)
                 .autor(usuarioLogado)
+                .titulo(normalizarTexto(dto.getTitulo()))
+                .tipo(dto.getTipo())
+                .fase(normalizarTexto(dto.getFase()))
                 .descricao(dto.getDescricao().trim())
+                .metadataJson(normalizarTexto(dto.getMetadataJson()))
                 .build();
         Progresso salvo = progressoRepository.save(progresso);
 
@@ -61,6 +65,12 @@ public class ProgressoService {
         validarPermissaoEdicao(progresso, usuarioLogado.getId());
 
         progresso.setDescricao(dto.getDescricao().trim());
+        progresso.setTitulo(normalizarTexto(dto.getTitulo()));
+        if (dto.getTipo() != null) {
+            progresso.setTipo(dto.getTipo());
+        }
+        progresso.setFase(normalizarTexto(dto.getFase()));
+        progresso.setMetadataJson(normalizarTexto(dto.getMetadataJson()));
         return progressoRepository.save(progresso);
     }
 
@@ -96,5 +106,13 @@ public class ProgressoService {
         if (!autorDoRegistro && !donoProjeto) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para editar este progresso");
         }
+    }
+
+    private String normalizarTexto(String valor) {
+        if (valor == null) {
+            return null;
+        }
+        String normalizado = valor.trim();
+        return normalizado.isEmpty() ? null : normalizado;
     }
 }

@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import com.example.tcc_backend.model.TipoUsuario;
 
 @Data
 public class RegisterRequest {
@@ -24,4 +25,13 @@ public class RegisterRequest {
     @NotBlank(message = "RA obrigatorio")
     @Size(max = 30, message = "RA deve ter no maximo 30 caracteres")
     private String ra;
+
+    private TipoUsuario tipo;
+    private Integer cursoId;
+    private Integer semestre;
+    private String instituicao;
+    private String departamento;
+    private String titulacao;
+    private String bio;
+    private String interesses;
 }

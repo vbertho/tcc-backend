@@ -42,6 +42,12 @@ public class Inscricao {
     @Column(name = "status", nullable = false)
     private StatusInscricao status;
 
+    @Column(name = "motivacao", columnDefinition = "TEXT")
+    private String motivacao;
+
+    @Column(name = "parecer_orientador", columnDefinition = "TEXT")
+    private String parecerOrientador;
+
     @Column(name = "data_inscricao")
     private LocalDateTime dataInscricao;
 

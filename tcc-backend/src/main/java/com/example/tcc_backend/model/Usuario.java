@@ -49,10 +49,28 @@ public class Usuario implements UserDetails {
     @Column(name = "ativo")
     private Boolean ativo;
 
+    @Column(name = "instituicao", length = 150)
+    private String instituicao;
+
+    @Column(name = "bio", columnDefinition = "TEXT")
+    private String bio;
+
+    @Column(name = "tema", length = 30)
+    private String tema;
+
+    @Column(name = "notificacoes_ativas")
+    private Boolean notificacoesAtivas;
+
     @PrePersist
     public void prePersist() {
         this.dataCadastro = LocalDateTime.now();
         this.ativo = true;
+        if (this.tema == null) {
+            this.tema = "sistema";
+        }
+        if (this.notificacoesAtivas == null) {
+            this.notificacoesAtivas = true;
+        }
     }
 
     @Override

@@ -7,6 +7,8 @@ import com.example.tcc_backend.repository.NotificacaoRepository;
 import com.example.tcc_backend.repository.UsuarioRepository;
 import com.example.tcc_backend.security.AuthHelper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -24,6 +26,11 @@ public class NotificacaoService {
     public List<Notificacao> minhasNotificacoes() {
         Usuario usuarioLogado = authHelper.getCurrentUser();
         return notificacaoRepository.findByUsuarioIdOrderByDataCriacaoDesc(usuarioLogado.getId());
+    }
+
+    public Page<Notificacao> minhasNotificacoes(Pageable pageable) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        return notificacaoRepository.findByUsuarioIdOrderByDataCriacaoDesc(usuarioLogado.getId(), pageable);
     }
 
     public Notificacao marcarComoLida(Integer id) {
@@ -52,6 +59,16 @@ public class NotificacaoService {
     }
 
     public void criarNotificacao(Integer usuarioId, String mensagem, TipoNotificacao tipo) {
+        criarNotificacao(usuarioId, mensagem, tipo, null, null, rotaPadrao(tipo), null);
+    }
+
+    public void criarNotificacao(Integer usuarioId,
+                                 String mensagem,
+                                 TipoNotificacao tipo,
+                                 String entidadeRelacionada,
+                                 Integer entidadeId,
+                                 String rotaSugerida,
+                                 String payloadResumo) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
 
@@ -59,7 +76,24 @@ public class NotificacaoService {
                 .usuario(usuario)
                 .mensagem(mensagem)
                 .tipo(tipo)
+                .entidadeRelacionada(entidadeRelacionada)
+                .entidadeId(entidadeId)
+                .rotaSugerida(rotaSugerida != null ? rotaSugerida : rotaPadrao(tipo))
+                .payloadResumo(payloadResumo)
                 .build();
         notificacaoRepository.save(notificacao);
+    }
+
+    public long contarNaoLidas(Integer usuarioId) {
+        return notificacaoRepository.countByUsuarioIdAndLidaFalse(usuarioId);
+    }
+
+    private String rotaPadrao(TipoNotificacao tipo) {
+        return switch (tipo) {
+            case INSCRICAO_RECEBIDA -> "/inscricoes";
+            case INSCRICAO_APROVADA, INSCRICAO_REJEITADA -> "/minhas-inscricoes";
+            case MENSAGEM_RECEBIDA -> "/conversas";
+            case PROGRESSO_REGISTRADO -> "/projetos";
+        };
     }
 }

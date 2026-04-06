@@ -59,7 +59,7 @@ class InscricaoControllerIntegrationTest {
         mockMvc.perform(get("/api/inscricoes/2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(2))
-                .andExpect(jsonPath("$.projeto.id").value(10));
+                .andExpect(jsonPath("$.projetoId").value(10));
     }
 
     @Test
@@ -81,10 +81,10 @@ class InscricaoControllerIntegrationTest {
 
         mockMvc.perform(post("/api/inscricoes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(4))
-                .andExpect(jsonPath("$.projeto.id").value(10));
+                .andExpect(jsonPath("$.projetoId").value(10));
     }
 
     @Test
@@ -97,7 +97,7 @@ class InscricaoControllerIntegrationTest {
 
     @Test
     void aprovarDeveRetornarInscricaoAprovada() throws Exception {
-        when(inscricaoService.aprovar(5)).thenReturn(inscricaoExemplo(5, 10));
+        when(inscricaoService.aprovar(5, null)).thenReturn(inscricaoExemplo(5, 10));
 
         mockMvc.perform(put("/api/inscricoes/5/aprovar"))
                 .andExpect(status().isOk())
@@ -109,7 +109,7 @@ class InscricaoControllerIntegrationTest {
     void rejeitarDeveRetornarInscricaoRejeitada() throws Exception {
         Inscricao inscricao = inscricaoExemplo(6, 10);
         inscricao.setStatus(com.example.tcc_backend.model.StatusInscricao.REJEITADO);
-        when(inscricaoService.rejeitar(6)).thenReturn(inscricao);
+        when(inscricaoService.rejeitar(6, null)).thenReturn(inscricao);
 
         mockMvc.perform(put("/api/inscricoes/6/rejeitar"))
                 .andExpect(status().isOk())
@@ -135,10 +135,10 @@ class InscricaoControllerIntegrationTest {
 
         mockMvc.perform(put("/api/inscricoes/8")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(8))
-                .andExpect(jsonPath("$.projeto.id").value(11));
+                .andExpect(jsonPath("$.projetoId").value(11));
     }
 
     private Inscricao inscricaoExemplo(Integer inscricaoId, Integer projetoId) {

@@ -52,10 +52,10 @@ class ConversaControllerIntegrationTest {
 
         mockMvc.perform(post("/api/conversas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.projeto.id").value(10));
+                .andExpect(jsonPath("$.projetoId").value(10));
     }
 
     @Test
@@ -78,7 +78,7 @@ class ConversaControllerIntegrationTest {
         mockMvc.perform(get("/api/conversas/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(2))
-                .andExpect(jsonPath("$[0].projeto.id").value(10));
+                .andExpect(jsonPath("$[0].projetoId").value(10));
     }
 
     @Test
@@ -113,7 +113,7 @@ class ConversaControllerIntegrationTest {
 
         mockMvc.perform(post("/api/conversas/5/mensagem")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(6))
                 .andExpect(jsonPath("$.conteudo").value("Ola"));
