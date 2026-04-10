@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.nio.file.Path;
 
 @RestController
@@ -54,6 +55,16 @@ public class DocumentoController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(arquivo.getFileName().toString()).build().toString())
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(resource);
+    }
+
+    @GetMapping("/usuario/{usuarioId}")
+    public ResponseEntity<List<DocumentoResponse>> listarDoUsuario(@PathVariable Integer usuarioId) {
+        return ResponseEntity.ok(
+                documentoService.listarPorUsuario(usuarioId)
+                        .stream()
+                        .map(DocumentoResponse::fromEntity)
+                        .toList()
+        );
     }
 
     @DeleteMapping("/{id}")

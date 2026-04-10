@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/tcc-backend.iml" filepath="$PROJECT_DIR$/.idea/tcc-backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tcc-backend/tcc-backend.iml" filepath="$PROJECT_DIR$/tcc-backend/tcc-backend.iml" />
     </modules>
   </component>
 </project>
