@@ -31,10 +31,14 @@ public class DocumentoController {
     private final DocumentoService documentoService;
 
     @PostMapping("/upload")
-    public ResponseEntity<DocumentoResponse> upload(@RequestParam("tipo") TipoDocumento tipo,
-                                                    @RequestParam("arquivo") MultipartFile arquivo) {
+    public ResponseEntity<DocumentoResponse> upload(
+            @RequestParam("usuarioId") Integer id_usuario, // ⬅️ CORRIGIDO PARA Integer AQUI
+            @RequestParam("tipo") TipoDocumento tipo,
+            @RequestParam("arquivo") MultipartFile arquivo) {
+
+        // Repassamos o usuarioId para o service
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(DocumentoResponse.fromEntity(documentoService.upload(tipo, arquivo)));
+                .body(DocumentoResponse.fromEntity(documentoService.upload(id_usuario, tipo, arquivo)));
     }
 
     @GetMapping("/{id}/download")

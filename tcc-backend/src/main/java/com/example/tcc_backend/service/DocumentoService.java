@@ -36,35 +36,38 @@ public class DocumentoService {
     private final UsuarioRepository usuarioRepository;
     private final AuthHelper authHelper;
 
-    public Documento upload(TipoDocumento tipo, MultipartFile arquivo) {
+    public Documento upload(Integer usuarioId, TipoDocumento tipo, MultipartFile arquivo) {
         if (tipo == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo do documento obrigatorio");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo do documento obrigatório");
         }
 
         if (arquivo == null || arquivo.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo obrigatorio");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Arquivo obrigatório");
         }
 
-        Usuario usuarioLogado = authHelper.getCurrentUser();
-        String caminho = salvarArquivo(usuarioLogado, arquivo);
+        // 1. Em vez de usar o authHelper (que pegaria o Admin),
+        // nós buscamos o usuário pelo ID que veio do React
+        Usuario usuarioAlvo = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
+        // 2. Salva o arquivo na pasta correta desse usuário
+        String caminho = salvarArquivo(usuarioAlvo, arquivo);
+
+        // 3. Monta o documento vinculando ao usuário alvo
         Documento documento = Documento.builder()
-                .usuario(usuarioLogado)
+                .usuario(usuarioAlvo)
                 .tipo(tipo)
+                .nomeArquivo(arquivo.getOriginalFilename()) // ⬅️ IMPORTANTE: Salva o nome para o React mostrar na tela!
                 .status(StatusDocumento.ENVIADO)
                 .caminho(caminho)
                 .build();
+
         return documentoRepository.save(documento);
     }
 
     public List<Documento> listarPorUsuario(Integer usuarioId) {
-        Usuario usuarioLogado = authHelper.getCurrentUser();
-        if (!usuarioLogado.getId().equals(usuarioId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para listar documentos de outro usuario");
-        }
-
-        usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+        // Removemos a verificação do authHelper que bloqueava o Admin
+        // Agora ele simplesmente vai no banco e devolve os arquivos do usuário
         return documentoRepository.findByUsuarioId(usuarioId);
     }
 

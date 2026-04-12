@@ -41,6 +41,10 @@ public class Documento {
     @Column(name = "caminho", nullable = false, length = 500)
     private String caminho;
 
+    // ⬇️ ADICIONE ESTAS DUAS LINHAS AQUI ⬇️
+    @Column(name = "nome_arquivo", length = 255)
+    private String nomeArquivo;
+
     @Column(name = "data_envio")
     private LocalDateTime dataEnvio;
 

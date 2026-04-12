@@ -40,10 +40,13 @@ class DocumentoControllerIntegrationTest {
         Documento documento = TestDataFactory.documento(1, TestDataFactory.usuarioAluno(1), "uploads/documentos/1/arquivo.pdf");
         MockMultipartFile arquivo = new MockMultipartFile("arquivo", "arquivo.pdf", "application/pdf", "conteudo".getBytes());
 
-        when(documentoService.upload(eq(TipoDocumento.CURRICULO), any())).thenReturn(documento);
+        // CORREÇÃO 1: Adicione o eq(1) como primeiro parâmetro do mock para simular o usuarioId
+        when(documentoService.upload(eq(1), eq(TipoDocumento.CURRICULO), any())).thenReturn(documento);
 
         mockMvc.perform(multipart("/api/documentos/upload")
                         .file(arquivo)
+                        // CORREÇÃO 2: Envie o parâmetro 'usuarioId' na requisição simulada
+                        .param("usuarioId", "1")
                         .param("tipo", "CURRICULO"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
