@@ -22,6 +22,8 @@ public class InscricaoResponse {
     private String parecerOrientador;
     private Integer projetoId;
     private String projetoTitulo;
+    /** Objeto completo do projeto (clientes que esperam {@code projeto} aninhado). */
+    private ProjetoResponse projeto;
     private Integer alunoId;
     private Integer alunoUsuarioId;
     private String alunoNome;
@@ -35,6 +37,7 @@ public class InscricaoResponse {
                 .parecerOrientador(inscricao.getParecerOrientador())
                 .projetoId(inscricao.getProjeto() != null ? inscricao.getProjeto().getId() : null)
                 .projetoTitulo(inscricao.getProjeto() != null ? inscricao.getProjeto().getTitulo() : null)
+                .projeto(inscricao.getProjeto() != null ? ProjetoResponse.fromEntity(inscricao.getProjeto()) : null)
                 .alunoId(inscricao.getAluno() != null ? inscricao.getAluno().getId() : null)
                 .alunoUsuarioId(inscricao.getAluno() != null && inscricao.getAluno().getUsuario() != null ? inscricao.getAluno().getUsuario().getId() : null)
                 .alunoNome(inscricao.getAluno() != null && inscricao.getAluno().getUsuario() != null ? inscricao.getAluno().getUsuario().getNome() : null)

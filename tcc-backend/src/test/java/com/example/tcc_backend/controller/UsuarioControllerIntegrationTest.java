@@ -4,6 +4,7 @@ import com.example.tcc_backend.dto.request.UsuarioRequest;
 import com.example.tcc_backend.model.Inscricao;
 import com.example.tcc_backend.model.Projeto;
 import com.example.tcc_backend.service.DocumentoService;
+import com.example.tcc_backend.service.InscricaoService;
 import com.example.tcc_backend.service.UsuarioService;
 import com.example.tcc_backend.support.ControllerTestSupport;
 import com.example.tcc_backend.support.TestDataFactory;
@@ -36,12 +37,15 @@ class UsuarioControllerIntegrationTest {
     @Mock
     private DocumentoService documentoService;
 
+    @Mock
+    private InscricaoService inscricaoService;
+
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        mockMvc = ControllerTestSupport.buildMockMvc(new UsuarioController(usuarioService, documentoService));
+        mockMvc = ControllerTestSupport.buildMockMvc(new UsuarioController(usuarioService, documentoService, inscricaoService));
     }
 
     @Test
@@ -149,7 +153,7 @@ class UsuarioControllerIntegrationTest {
         var projeto = TestDataFactory.projetoComOrientador(10, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
         Inscricao inscricao = TestDataFactory.inscricaoAprovada(6, aluno, projeto);
 
-        when(usuarioService.findMinhasInscricoes()).thenReturn(List.of(inscricao));
+        when(inscricaoService.findByUsuarioLogado()).thenReturn(List.of(inscricao));
 
         mockMvc.perform(get("/api/usuarios/minhas-inscricoes"))
                 .andExpect(status().isOk())

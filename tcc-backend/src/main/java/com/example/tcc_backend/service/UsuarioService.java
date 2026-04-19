@@ -143,14 +143,6 @@ public class UsuarioService {
         return inscricaoRepository.findByProjetoOrientadorUsuarioId(id);
     }
 
-    public List<Inscricao> findMinhasInscricoes() {
-        Usuario usuarioLogado = authHelper.getCurrentUser();
-        if (usuarioLogado.getTipo() != TipoUsuario.ALUNO) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Endpoint exclusivo para alunos");
-        }
-        return inscricaoRepository.findByAlunoUsuarioId(usuarioLogado.getId());
-    }
-
     private void validarAcessoAoUsuario(Integer id, boolean permitirOrientador) {
         Usuario usuarioLogado = authHelper.getCurrentUser();
 

@@ -51,6 +51,18 @@ public class InscricaoService {
         return inscricaoRepository.findByProjetoId(projetoId);
     }
 
+    /**
+     * Inscrições do usuário autenticado na visão de "minhas inscrições".
+     * Alunos veem as próprias inscrições; demais perfis recebem lista vazia.
+     */
+    public List<Inscricao> findByUsuarioLogado() {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        if (usuarioLogado.getTipo() == TipoUsuario.ALUNO) {
+            return inscricaoRepository.findByAlunoUsuarioId(usuarioLogado.getId());
+        }
+        return List.of();
+    }
+
     public Page<Inscricao> findByProjeto(Integer projetoId, Pageable pageable) {
         return inscricaoRepository.findByProjetoId(projetoId, pageable);
     }

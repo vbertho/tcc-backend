@@ -16,6 +16,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -183,5 +184,27 @@ class InscricaoServiceTest {
         Inscricao atualizada = inscricaoService.update(5, InscricaoRequest.builder().projetoId(11).build());
 
         assertThat(atualizada.getProjeto().getId()).isEqualTo(11);
+    }
+
+    @Test
+    void findByUsuarioLogadoDeveRetornarInscricoesDoAluno() {
+        Usuario alunoUsuario = TestDataFactory.usuarioAluno(1);
+        Inscricao inscricao = TestDataFactory.inscricaoAprovada(
+                5,
+                TestDataFactory.aluno(1, alunoUsuario),
+                TestDataFactory.projetoComOrientador(10, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)))
+        );
+
+        when(authHelper.getCurrentUser()).thenReturn(alunoUsuario);
+        when(inscricaoRepository.findByAlunoUsuarioId(1)).thenReturn(List.of(inscricao));
+
+        assertThat(inscricaoService.findByUsuarioLogado()).containsExactly(inscricao);
+    }
+
+    @Test
+    void findByUsuarioLogadoDeveRetornarListaVaziaParaOrientador() {
+        when(authHelper.getCurrentUser()).thenReturn(TestDataFactory.usuarioOrientador(2));
+
+        assertThat(inscricaoService.findByUsuarioLogado()).isEmpty();
     }
 }

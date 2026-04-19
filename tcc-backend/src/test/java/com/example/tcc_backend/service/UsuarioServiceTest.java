@@ -199,14 +199,4 @@ class UsuarioServiceTest {
 
         assertThat(inscricoes).hasSize(1);
     }
-
-    @Test
-    void findMinhasInscricoesDeveNegarOrientador() {
-        when(authHelper.getCurrentUser()).thenReturn(TestDataFactory.usuarioOrientador(2));
-
-        assertThatThrownBy(() -> usuarioService.findMinhasInscricoes())
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
-                .isEqualTo(HttpStatus.FORBIDDEN);
-    }
 }

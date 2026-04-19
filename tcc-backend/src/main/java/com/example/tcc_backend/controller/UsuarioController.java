@@ -9,6 +9,7 @@ import com.example.tcc_backend.dto.response.ProjetoResponse;
 import com.example.tcc_backend.dto.response.UsuarioProfileResponse;
 import com.example.tcc_backend.dto.response.UsuarioResponse;
 import com.example.tcc_backend.service.DocumentoService;
+import com.example.tcc_backend.service.InscricaoService;
 import com.example.tcc_backend.service.UsuarioService;
 
 import jakarta.validation.Valid;
@@ -34,6 +35,7 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final DocumentoService documentoService;
+    private final InscricaoService inscricaoService;
 
     @Operation(
             summary = "Listar todos os usuários",
@@ -173,7 +175,7 @@ public class UsuarioController {
 
     @Operation(
             summary = "Listar minhas inscrições",
-            description = "Retorna todas as inscrições do usuário autenticado."
+            description = "Retorna as inscrições do usuário autenticado. Para alunos, lista as inscrições vinculadas ao perfil de aluno; para orientadores e demais perfis, retorna lista vazia."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Inscrições retornadas com sucesso"),
@@ -181,7 +183,7 @@ public class UsuarioController {
     })
     @GetMapping("/minhas-inscricoes")
     public ResponseEntity<List<InscricaoResponse>> findMinhasInscricoes() {
-        return ResponseEntity.ok(usuarioService.findMinhasInscricoes()
+        return ResponseEntity.ok(inscricaoService.findByUsuarioLogado()
                 .stream().map(InscricaoResponse::fromEntity).toList());
     }
 
