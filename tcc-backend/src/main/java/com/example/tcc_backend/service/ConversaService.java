@@ -59,22 +59,28 @@ public class ConversaService {
     }
 
     public List<Conversa> listarConversasDoUsuario(Integer usuarioId) {
-        Usuario usuarioLogado = authHelper.getCurrentUser();
-        if (!usuarioLogado.getId().equals(usuarioId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para listar conversas de outro usuario");
-        }
 
-        Set<Conversa> conversas = new LinkedHashSet<>(
-                conversaRepository.findByProjetoOrientadorUsuarioIdOrProjetoAlunoCriadorUsuarioId(usuarioId, usuarioId)
+        Set<Projeto> projetos = new LinkedHashSet<>();
+
+        projetos.addAll(
+                projetoRepository.findByOrientadorUsuarioIdOrAlunoCriadorUsuarioId(usuarioId, usuarioId)
         );
 
-        List<Inscricao> inscricoes = inscricaoRepository.findByAlunoUsuarioIdAndStatus(usuarioId, StatusInscricao.APROVADO);
-        List<Integer> projetoIds = inscricoes.stream().map(i -> i.getProjeto().getId()).distinct().toList();
-        if (!projetoIds.isEmpty()) {
-            conversas.addAll(conversaRepository.findByProjetoIdIn(projetoIds));
+        List<Inscricao> inscricoes = inscricaoRepository
+                .findByAlunoUsuarioIdAndStatus(usuarioId, StatusInscricao.APROVADO);
+
+        for (Inscricao i : inscricoes) {
+            projetos.add(i.getProjeto());
         }
 
-        return new ArrayList<>(conversas);
+        List<Conversa> conversas = new ArrayList<>();
+
+        for (Projeto projeto : projetos) {
+            Conversa conversa = abrirOuCriarPorProjeto(projeto.getId());
+            conversas.add(conversa);
+        }
+
+        return conversas;
     }
 
     public Page<Conversa> listarConversasDoUsuario(Integer usuarioId, Pageable pageable) {
