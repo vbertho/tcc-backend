@@ -6,6 +6,8 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "conversa")
@@ -21,9 +23,28 @@ public class Conversa {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "id_projeto", nullable = false)
+    @JoinColumn(name = "id_projeto", nullable = true)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Projeto projeto;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", nullable = false)
+    @Builder.Default
+    private TipoConversa tipo = TipoConversa.GRUPO;
+
+    @ManyToMany
+    @JoinTable(
+            name = "conversa_participantes",
+            joinColumns = @JoinColumn(name = "id_conversa"),
+            inverseJoinColumns = @JoinColumn(name = "id_usuario")
+    )
+    @Builder.Default
+    private List<Usuario> participantes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "conversa", fetch = FetchType.LAZY)
+    @OrderBy("dataEnvio DESC")
+    @Builder.Default
+    private List<Mensagem> mensagens = new ArrayList<>();
 
     @Column(name = "data_criacao")
     private LocalDateTime dataCriacao;

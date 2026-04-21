@@ -4,6 +4,8 @@ import com.example.tcc_backend.dto.request.ConversaRequest;
 import com.example.tcc_backend.dto.request.MensagemRequest;
 import com.example.tcc_backend.model.Conversa;
 import com.example.tcc_backend.model.Mensagem;
+import com.example.tcc_backend.model.Usuario;
+import com.example.tcc_backend.security.AuthHelper;
 import com.example.tcc_backend.service.ConversaService;
 import com.example.tcc_backend.support.ControllerTestSupport;
 import com.example.tcc_backend.support.TestDataFactory;
@@ -30,12 +32,18 @@ class ConversaControllerIntegrationTest {
     @Mock
     private ConversaService conversaService;
 
+    @Mock
+    private AuthHelper authHelper;
+
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
-        mockMvc = ControllerTestSupport.buildMockMvc(new ConversaController(conversaService));
+        Usuario usuarioLogado = TestDataFactory.usuarioAluno(1);
+        when(authHelper.getCurrentUser()).thenReturn(usuarioLogado);
+
+        mockMvc = ControllerTestSupport.buildMockMvc(new ConversaController(conversaService, authHelper));
     }
 
     @Test
@@ -52,7 +60,7 @@ class ConversaControllerIntegrationTest {
 
         mockMvc.perform(post("/api/conversas")
                         .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.projetoId").value(10));
@@ -113,7 +121,7 @@ class ConversaControllerIntegrationTest {
 
         mockMvc.perform(post("/api/conversas/5/mensagem")
                         .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(6))
                 .andExpect(jsonPath("$.conteudo").value("Ola"));

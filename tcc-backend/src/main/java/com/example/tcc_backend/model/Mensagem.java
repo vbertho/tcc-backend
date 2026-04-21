@@ -38,8 +38,16 @@ public class Mensagem {
     @Column(name = "data_envio")
     private LocalDateTime dataEnvio;
 
+    @Builder.Default
+    @Column(name = "editada", nullable = false)
+    private Boolean editada = false;
+
+    @Column(name = "data_edicao")
+    private LocalDateTime dataEdicao;
+
     @PrePersist
     public void prePersist() {
         this.dataEnvio = LocalDateTime.now();
+        if (this.editada == null) this.editada = false;
     }
 }

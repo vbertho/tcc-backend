@@ -20,6 +20,8 @@ public class MensagemResponse {
     private LocalDateTime dataEnvio;
     private Integer remetenteId;
     private String remetenteNome;
+    private Boolean editada;
+    private LocalDateTime dataEdicao;
 
     public static MensagemResponse fromEntity(Mensagem mensagem) {
         return MensagemResponse.builder()
@@ -29,6 +31,8 @@ public class MensagemResponse {
                 .dataEnvio(mensagem.getDataEnvio())
                 .remetenteId(mensagem.getRemetente() != null ? mensagem.getRemetente().getId() : null)
                 .remetenteNome(mensagem.getRemetente() != null ? mensagem.getRemetente().getNome() : null)
+                .editada(mensagem.getEditada())
+                .dataEdicao(mensagem.getDataEdicao())
                 .build();
     }
 }
