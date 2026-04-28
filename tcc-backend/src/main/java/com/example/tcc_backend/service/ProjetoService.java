@@ -12,6 +12,7 @@ import com.example.tcc_backend.security.AuthHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -32,6 +33,59 @@ public class ProjetoService {
     private final UsuarioRepository usuarioRepository;
     private final AuthHelper authHelper;
     private final NotificacaoService notificacaoService;
+
+    public List<Projeto> findAll(String status, Integer areaId, String area, String curso, String busca) {
+        return projetoRepository.findAll(createSpecification(status, areaId, area, curso, busca));
+    }
+
+    public Page<Projeto> findAll(String status, Integer areaId, String area, String curso, String busca, Pageable pageable) {
+        return projetoRepository.findAll(createSpecification(status, areaId, area, curso, busca), pageable);
+    }
+
+    private Specification<Projeto> createSpecification(String status, Integer areaId, String area, String curso, String busca) {
+        Specification<Projeto> spec = Specification.where(null);
+
+        if (busca != null && !busca.trim().isEmpty()) {
+            final String term = busca.trim().toLowerCase();
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("titulo")), "%" + term + "%"));
+        }
+
+        if (area != null && !area.trim().isEmpty()) {
+            final String areaNome = area.trim();
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("area").get("nome"), areaNome));
+        }
+
+        if (areaId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("area").get("id"), areaId));
+        }
+
+        if (curso != null && !curso.trim().isEmpty()) {
+            final String cursoNome = curso.trim();
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("area").get("curso").get("nome"), cursoNome));
+        }
+
+        if (status != null && !status.trim().isEmpty()) {
+            final String raw = status.trim();
+            final String normalized = raw.toUpperCase();
+
+            if ("ATIVO".equals(normalized)) {
+                // Compatibilidade: "ATIVO" significa projeto em andamento (nao FINALIZADO).
+                spec = spec.and((root, query, cb) -> cb.or(
+                        cb.equal(root.get("status"), StatusProjeto.ABERTO),
+                        cb.equal(root.get("status"), StatusProjeto.EM_ANDAMENTO)
+                ));
+            } else {
+                try {
+                    StatusProjeto statusEnum = StatusProjeto.valueOf(normalized);
+                    spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), statusEnum));
+                } catch (IllegalArgumentException e) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status invalido: " + raw);
+                }
+            }
+        }
+
+        return spec;
+    }
 
     public List<Projeto> findAll() {
         return projetoRepository.findAll();

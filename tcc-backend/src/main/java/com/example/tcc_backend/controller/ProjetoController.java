@@ -51,22 +51,12 @@ public class ProjetoController {
             @RequestParam(required = false) String curso,
             @RequestParam(required = false) String busca) {
 
-        List<ProjetoResponse> response;
-        if (status != null) {
-            try {
-                response = projetoService.findByStatus(StatusProjeto.valueOf(status.toUpperCase()))
-                        .stream().map(ProjetoResponse::fromEntity).toList();
-            } catch (IllegalArgumentException ex) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status invalido");
-            }
-            return ResponseEntity.ok(response);
-        }
-        if (areaId != null) return ResponseEntity.ok(projetoService.findByArea(areaId).stream().map(ProjetoResponse::fromEntity).toList());
-        if (area != null) return ResponseEntity.ok(projetoService.findByAreaNome(area).stream().map(ProjetoResponse::fromEntity).toList());
-        if (curso != null) return ResponseEntity.ok(projetoService.findByCursoNome(curso).stream().map(ProjetoResponse::fromEntity).toList());
-        if (busca != null) return ResponseEntity.ok(projetoService.findByBusca(busca).stream().map(ProjetoResponse::fromEntity).toList());
-
-        return ResponseEntity.ok(projetoService.findAll().stream().map(ProjetoResponse::fromEntity).toList());
+        return ResponseEntity.ok(
+                projetoService.findAll(status, areaId, area, curso, busca)
+                        .stream()
+                        .map(ProjetoResponse::fromEntity)
+                        .toList()
+        );
     }
 
     @Operation(
@@ -95,21 +85,11 @@ public class ProjetoController {
         if (Boolean.TRUE.equals(meusProjetos)) {
             return ResponseEntity.ok(PageResponse.from(projetoService.findMeusProjetos(pageable).map(ProjetoResponse::fromEntity)));
         }
-        if (status != null) {
-            try {
-                return ResponseEntity.ok(PageResponse.from(
-                        projetoService.findByStatus(StatusProjeto.valueOf(status.toUpperCase()), pageable)
-                                .map(ProjetoResponse::fromEntity)));
-            } catch (IllegalArgumentException ex) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Status invalido");
-            }
-        }
-        if (areaId != null) return ResponseEntity.ok(PageResponse.from(projetoService.findByArea(areaId, pageable).map(ProjetoResponse::fromEntity)));
-        if (area != null) return ResponseEntity.ok(PageResponse.from(projetoService.findByAreaNome(area, pageable).map(ProjetoResponse::fromEntity)));
-        if (curso != null) return ResponseEntity.ok(PageResponse.from(projetoService.findByCursoNome(curso, pageable).map(ProjetoResponse::fromEntity)));
-        if (busca != null) return ResponseEntity.ok(PageResponse.from(projetoService.findByBusca(busca, pageable).map(ProjetoResponse::fromEntity)));
 
-        return ResponseEntity.ok(PageResponse.from(projetoService.findAll(pageable).map(ProjetoResponse::fromEntity)));
+        return ResponseEntity.ok(PageResponse.from(
+                projetoService.findAll(status, areaId, area, curso, busca, pageable)
+                        .map(ProjetoResponse::fromEntity)
+        ));
     }
 
     @Operation(
