@@ -78,9 +78,9 @@ class ConversaServiceTest {
         Inscricao inscricao = TestDataFactory.inscricaoAprovada(5, TestDataFactory.aluno(1, usuario), projetoAprovado);
 
         when(authHelper.getCurrentUser()).thenReturn(usuario);
-        when(conversaRepository.findByProjetoOrientadorUsuarioIdOrProjetoAlunoCriadorUsuarioId(1, 1)).thenReturn(List.of(conversaDireta));
         when(inscricaoRepository.findByAlunoUsuarioIdAndStatus(1, StatusInscricao.APROVADO)).thenReturn(List.of(inscricao));
-        when(conversaRepository.findByProjetoIdIn(List.of(11))).thenReturn(List.of(conversaAprovada));
+        when(projetoRepository.findByOrientadorUsuarioIdOrAlunoCriadorUsuarioId(1, 1)).thenReturn(List.of(projetoDireto));
+        when(conversaRepository.findByProjetoIdIn(List.of(10, 11))).thenReturn(List.of(conversaDireta, conversaAprovada));
 
         List<Conversa> conversas = conversaService.listarConversasDoUsuario(1);
 

@@ -43,7 +43,7 @@ public class ProjetoService {
     }
 
     private Specification<Projeto> createSpecification(String status, Integer areaId, String area, String curso, String busca) {
-        Specification<Projeto> spec = Specification.where(null);
+        Specification<Projeto> spec = (root, query, cb) -> cb.conjunction();
 
         if (busca != null && !busca.trim().isEmpty()) {
             final String term = busca.trim().toLowerCase();

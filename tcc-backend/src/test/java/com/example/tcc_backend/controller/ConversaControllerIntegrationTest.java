@@ -40,14 +40,12 @@ class ConversaControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        Usuario usuarioLogado = TestDataFactory.usuarioAluno(1);
-        when(authHelper.getCurrentUser()).thenReturn(usuarioLogado);
-
         mockMvc = ControllerTestSupport.buildMockMvc(new ConversaController(conversaService, authHelper));
     }
 
     @Test
     void criarDeveRetornarConversaCriada() throws Exception {
+        when(authHelper.getCurrentUser()).thenReturn(TestDataFactory.usuarioAluno(1));
         ConversaRequest request = new ConversaRequest();
         request.setProjetoId(10);
 
@@ -76,6 +74,7 @@ class ConversaControllerIntegrationTest {
 
     @Test
     void listarConversasDeveRetornarLista() throws Exception {
+        when(authHelper.getCurrentUser()).thenReturn(TestDataFactory.usuarioAluno(1));
         Conversa conversa = TestDataFactory.conversa(
                 2,
                 TestDataFactory.projetoComAlunoCriador(10, TestDataFactory.aluno(1, TestDataFactory.usuarioAluno(1)))

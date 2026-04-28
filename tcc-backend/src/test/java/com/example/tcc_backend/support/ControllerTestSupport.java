@@ -1,6 +1,7 @@
 package com.example.tcc_backend.support;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,6 +22,7 @@ public final class ControllerTestSupport {
         return MockMvcBuilders.standaloneSetup(controller)
                 .setValidator(validator)
                 .setMessageConverters(
+                        new ByteArrayHttpMessageConverter(),
                         new StringHttpMessageConverter(),
                         new MappingJackson2HttpMessageConverter(objectMapper)
                 )

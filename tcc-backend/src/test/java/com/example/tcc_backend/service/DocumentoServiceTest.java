@@ -30,6 +30,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class DocumentoServiceTest {
 
+    private static final int OVER_10MB = (10 * 1024 * 1024) + 1;
+
     @Mock
     private DocumentoRepository documentoRepository;
     @Mock
@@ -43,11 +45,12 @@ class DocumentoServiceTest {
     @Test
     void uploadDeveSalvarDocumentoValido() throws Exception {
         Usuario usuario = TestDataFactory.usuarioAluno(1);
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
         MockMultipartFile arquivo = new MockMultipartFile(
                 "arquivo",
                 "curriculo.pdf",
                 "application/pdf",
-                "conteudo".getBytes()
+                "%PDF-1.7\nconteudo".getBytes()
         );
 
         // 1. MUDANÇA AQUI: Nós não usamos mais o authHelper nesse método.
@@ -82,11 +85,55 @@ class DocumentoServiceTest {
         );
 
         when(authHelper.getCurrentUser()).thenReturn(usuario);
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario));
 
         assertThatThrownBy(() -> documentoService.upload(1,TipoDocumento.CURRICULO, arquivo))
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
                 .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void uploadDeveNegarQuandoUsuarioIdForDeOutroUsuario() {
+        Usuario usuario = TestDataFactory.usuarioAluno(1);
+        MockMultipartFile arquivo = new MockMultipartFile(
+                "arquivo",
+                "curriculo.pdf",
+                "application/pdf",
+                "%PDF-1.7\nconteudo".getBytes()
+        );
+
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+
+        assertThatThrownBy(() -> documentoService.upload(2, TipoDocumento.CURRICULO, arquivo))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void uploadDeveNegarQuandoArquivoForMuitoGrande() {
+        Usuario usuario = TestDataFactory.usuarioAluno(1);
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+
+        byte[] bytes = new byte[OVER_10MB];
+        bytes[0] = '%';
+        bytes[1] = 'P';
+        bytes[2] = 'D';
+        bytes[3] = 'F';
+        bytes[4] = '-';
+
+        MockMultipartFile arquivo = new MockMultipartFile(
+                "arquivo",
+                "curriculo.pdf",
+                "application/pdf",
+                bytes
+        );
+
+        assertThatThrownBy(() -> documentoService.upload(1, TipoDocumento.CURRICULO, arquivo))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
     }
 
     @Test

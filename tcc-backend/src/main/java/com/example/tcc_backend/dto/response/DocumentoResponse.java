@@ -22,12 +22,16 @@ public class DocumentoResponse {
     private String previewUrl;
 
     public static DocumentoResponse fromEntity(Documento documento) {
+        String nome = documento.getNomeArquivo();
+        if (nome == null || nome.isBlank()) {
+            nome = Path.of(documento.getCaminho()).getFileName().toString();
+        }
         return DocumentoResponse.builder()
                 .id(documento.getId())
                 .tipo(documento.getTipo())
                 .status(documento.getStatus())
                 .observacaoStatus(documento.getObservacaoStatus())
-                .nomeArquivo(Path.of(documento.getCaminho()).getFileName().toString())
+                .nomeArquivo(nome)
                 .dataEnvio(documento.getDataEnvio())
                 .downloadUrl("/api/documentos/" + documento.getId() + "/download")
                 .previewUrl("/api/documentos/" + documento.getId() + "/preview")

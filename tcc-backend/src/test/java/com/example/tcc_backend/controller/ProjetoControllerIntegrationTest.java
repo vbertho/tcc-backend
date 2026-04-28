@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -46,7 +47,7 @@ class ProjetoControllerIntegrationTest {
     @Test
     void findAllDeveRetornarProjetos() throws Exception {
         Projeto projeto = TestDataFactory.projetoComOrientador(10, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
-        when(projetoService.findAll()).thenReturn(List.of(projeto));
+        when(projetoService.findAll(eq(null), eq(null), eq(null), eq(null), eq(null))).thenReturn(List.of(projeto));
 
         mockMvc.perform(get("/api/projetos"))
                 .andExpect(status().isOk())
@@ -58,7 +59,7 @@ class ProjetoControllerIntegrationTest {
     void findAllComStatusDeveFiltrar() throws Exception {
         Projeto projeto = TestDataFactory.projetoComOrientador(11, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
         projeto.setStatus(StatusProjeto.EM_ANDAMENTO);
-        when(projetoService.findByStatus(StatusProjeto.EM_ANDAMENTO)).thenReturn(List.of(projeto));
+        when(projetoService.findAll(eq("EM_ANDAMENTO"), eq(null), eq(null), eq(null), eq(null))).thenReturn(List.of(projeto));
 
         mockMvc.perform(get("/api/projetos").param("status", "EM_ANDAMENTO"))
                 .andExpect(status().isOk())
@@ -67,13 +68,15 @@ class ProjetoControllerIntegrationTest {
 
     @Test
     void findAllComStatusInvalidoDeveRetornarBadRequest() throws Exception {
+        when(projetoService.findAll(eq("desconhecido"), eq(null), eq(null), eq(null), eq(null)))
+                .thenThrow(new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Status invalido"));
         mockMvc.perform(get("/api/projetos").param("status", "desconhecido"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void findAllComAreaIdDeveFiltrar() throws Exception {
-        when(projetoService.findByArea(7)).thenReturn(List.of(
+        when(projetoService.findAll(eq(null), eq(7), eq(null), eq(null), eq(null))).thenReturn(List.of(
                 TestDataFactory.projetoComAlunoCriador(12, TestDataFactory.aluno(1, TestDataFactory.usuarioAluno(1)))
         ));
 
@@ -84,7 +87,7 @@ class ProjetoControllerIntegrationTest {
 
     @Test
     void findAllComAreaDeveFiltrar() throws Exception {
-        when(projetoService.findByAreaNome("IA")).thenReturn(List.of(
+        when(projetoService.findAll(eq(null), eq(null), eq("IA"), eq(null), eq(null))).thenReturn(List.of(
                 TestDataFactory.projetoComAlunoCriador(13, TestDataFactory.aluno(1, TestDataFactory.usuarioAluno(1)))
         ));
 
@@ -95,7 +98,7 @@ class ProjetoControllerIntegrationTest {
 
     @Test
     void findAllComCursoDeveFiltrar() throws Exception {
-        when(projetoService.findByCursoNome("ADS")).thenReturn(List.of(
+        when(projetoService.findAll(eq(null), eq(null), eq(null), eq("ADS"), eq(null))).thenReturn(List.of(
                 TestDataFactory.projetoComAlunoCriador(14, TestDataFactory.aluno(1, TestDataFactory.usuarioAluno(1)))
         ));
 
@@ -106,7 +109,7 @@ class ProjetoControllerIntegrationTest {
 
     @Test
     void findAllComBuscaDeveFiltrar() throws Exception {
-        when(projetoService.findByBusca("java")).thenReturn(List.of(
+        when(projetoService.findAll(eq(null), eq(null), eq(null), eq(null), eq("java"))).thenReturn(List.of(
                 TestDataFactory.projetoComAlunoCriador(15, TestDataFactory.aluno(1, TestDataFactory.usuarioAluno(1)))
         ));
 

@@ -18,6 +18,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -60,5 +61,13 @@ class DocumentoControllerIntegrationTest {
 
         mockMvc.perform(delete("/api/documentos/5"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void previewDeveNegarQuandoNaoForPdf() throws Exception {
+        when(documentoService.obterArquivo(1)).thenReturn(java.nio.file.Path.of("uploads/documentos/1/arquivo.docx"));
+
+        mockMvc.perform(get("/api/documentos/1/preview"))
+                .andExpect(status().isUnsupportedMediaType());
     }
 }
