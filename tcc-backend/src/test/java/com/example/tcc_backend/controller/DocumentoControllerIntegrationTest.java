@@ -65,6 +65,7 @@ class DocumentoControllerIntegrationTest {
 
     @Test
     void previewDeveNegarQuandoNaoForPdf() throws Exception {
+        when(documentoService.obterDocumento(1)).thenReturn(Documento.builder().id(1).nomeArquivo("arquivo.docx").build());
         when(documentoService.obterArquivo(1)).thenReturn(java.nio.file.Path.of("uploads/documentos/1/arquivo.docx"));
 
         mockMvc.perform(get("/api/documentos/1/preview"))

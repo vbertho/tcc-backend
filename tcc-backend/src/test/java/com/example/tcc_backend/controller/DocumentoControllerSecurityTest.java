@@ -72,6 +72,7 @@ class DocumentoControllerSecurityTest {
 
     @Test
     void previewDocxDeveResponderComContentTypeDocx() throws Exception {
+        when(documentoService.obterDocumento(1)).thenReturn(Documento.builder().id(1).nomeArquivo("arquivo.docx").build());
         when(documentoService.obterArquivo(1))
                 .thenReturn(Path.of("uploads/documentos/1/arquivo.docx"));
 
@@ -81,6 +82,7 @@ class DocumentoControllerSecurityTest {
 
     @Test
     void previewDocDeveResponderComContentTypeDoc() throws Exception {
+        when(documentoService.obterDocumento(2)).thenReturn(Documento.builder().id(2).nomeArquivo("arquivo.doc").build());
         when(documentoService.obterArquivo(2))
                 .thenReturn(Path.of("uploads/documentos/1/arquivo.doc"));
 
@@ -92,6 +94,7 @@ class DocumentoControllerSecurityTest {
     void previewPdfDeveResponderComContentTypePdf() throws Exception {
         Path tmp = java.nio.file.Files.createTempFile("documento-preview-", ".pdf");
         java.nio.file.Files.writeString(tmp, "%PDF-1.7\nx");
+        when(documentoService.obterDocumento(3)).thenReturn(Documento.builder().id(3).nomeArquivo("arquivo.pdf").build());
         when(documentoService.obterArquivo(3)).thenReturn(tmp);
 
         mockMvc.perform(get("/api/documentos/3/preview"))

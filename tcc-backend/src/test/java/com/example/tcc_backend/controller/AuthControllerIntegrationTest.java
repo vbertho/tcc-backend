@@ -83,7 +83,7 @@ class AuthControllerIntegrationTest {
 
     @Test
     void logoutDeveRetornarMensagem() throws Exception {
-        when(authService.logout()).thenReturn("Logout realizado com sucesso");
+        when(authService.logout(any())).thenReturn("Logout realizado com sucesso");
 
         mockMvc.perform(post("/api/auth/logout"))
                 .andExpect(status().isOk())

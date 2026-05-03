@@ -15,6 +15,7 @@ import com.example.tcc_backend.repository.CursoRepository;
 import com.example.tcc_backend.repository.OrientadorRepository;
 import com.example.tcc_backend.repository.UsuarioRepository;
 import com.example.tcc_backend.security.AuthHelper;
+import com.example.tcc_backend.security.TokenRevocationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,6 +36,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final AuthHelper authHelper;
+    private final TokenRevocationService tokenRevocationService;
 
     public AuthService(UsuarioRepository usuarioRepository,
                        AlunoRepository alunoRepository,
@@ -43,7 +45,8 @@ public class AuthService {
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
                        AuthenticationManager authenticationManager,
-                       AuthHelper authHelper) {
+                       AuthHelper authHelper,
+                       TokenRevocationService tokenRevocationService) {
         this.usuarioRepository = usuarioRepository;
         this.alunoRepository = alunoRepository;
         this.orientadorRepository = orientadorRepository;
@@ -52,6 +55,7 @@ public class AuthService {
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.authHelper = authHelper;
+        this.tokenRevocationService = tokenRevocationService;
     }
 
     @Transactional
@@ -121,9 +125,25 @@ public class AuthService {
         SecurityContextHolder.clearContext();
     }
 
-    public String logout() {
+    public String logout(String authorizationHeader) {
+        String token = extractBearerToken(authorizationHeader);
+        if (token != null) {
+            tokenRevocationService.revoke(token);
+        }
         SecurityContextHolder.clearContext();
         return "Logout realizado com sucesso";
+    }
+
+    private String extractBearerToken(String authorizationHeader) {
+        if (authorizationHeader == null) {
+            return null;
+        }
+        String value = authorizationHeader.trim();
+        if (!value.startsWith("Bearer ")) {
+            return null;
+        }
+        String token = value.substring(7).trim();
+        return token.isEmpty() ? null : token;
     }
 
     private String normalizarTexto(String valor) {

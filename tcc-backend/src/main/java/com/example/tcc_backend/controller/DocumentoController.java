@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 
@@ -56,6 +57,7 @@ public class DocumentoController {
     })
     @GetMapping("/{id}/download")
     public ResponseEntity<byte[]> download(@PathVariable Integer id) {
+        var documento = documentoService.obterDocumento(id);
         Path arquivo = documentoService.obterArquivo(id);
         byte[] bytes;
         try {
@@ -64,10 +66,17 @@ public class DocumentoController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo nÃ£o encontrado");
         }
 
+        String filename = documento.getNomeArquivo();
+        if (filename == null || filename.isBlank()) {
+            filename = arquivo.getFileName().toString();
+        }
+        MediaType mediaType = inferMediaType(filename);
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.attachment().filename(arquivo.getFileName().toString()).build().toString())
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        ContentDisposition.attachment().filename(filename, StandardCharsets.UTF_8).build().toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .contentType(mediaType)
                 .body(bytes);
     }
 
@@ -78,9 +87,13 @@ public class DocumentoController {
     })
     @GetMapping("/{id}/preview")
     public ResponseEntity<byte[]> preview(@PathVariable Integer id) {
+        var documento = documentoService.obterDocumento(id);
         Path arquivo = documentoService.obterArquivo(id);
-        String name = arquivo.getFileName().toString().toLowerCase(Locale.ROOT);
-        if (!name.endsWith(".pdf")) {
+        String name = (documento.getNomeArquivo() == null || documento.getNomeArquivo().isBlank())
+                ? arquivo.getFileName().toString()
+                : documento.getNomeArquivo();
+        String lower = name.toLowerCase(Locale.ROOT);
+        if (!lower.endsWith(".pdf")) {
             throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Preview somente PDF");
         }
         byte[] bytes;
@@ -92,9 +105,20 @@ public class DocumentoController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.inline().filename(arquivo.getFileName().toString()).build().toString())
+                        ContentDisposition.inline().filename(name, StandardCharsets.UTF_8).build().toString())
+                .header("X-Content-Type-Options", "nosniff")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(bytes);
+    }
+
+    private MediaType inferMediaType(String filename) {
+        String name = filename == null ? "" : filename.toLowerCase(Locale.ROOT);
+        if (name.endsWith(".pdf")) return MediaType.APPLICATION_PDF;
+        if (name.endsWith(".doc")) return MediaType.parseMediaType("application/msword");
+        if (name.endsWith(".docx")) {
+            return MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        }
+        return MediaType.APPLICATION_OCTET_STREAM;
     }
 
     @Operation(summary = "Listar documentos do usuário", description = "Retorna todos os documentos de um usuário.")

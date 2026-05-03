@@ -21,10 +21,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
+    private final TokenRevocationService tokenRevocationService;
 
-    public JwtAuthFilter(JwtService jwtService, UsuarioRepository usuarioRepository) {
+    public JwtAuthFilter(JwtService jwtService,
+                         UsuarioRepository usuarioRepository,
+                         TokenRevocationService tokenRevocationService) {
         this.jwtService = jwtService;
         this.usuarioRepository = usuarioRepository;
+        this.tokenRevocationService = tokenRevocationService;
     }
 
     @Override
@@ -54,7 +58,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
 
-            if (usuario != null && jwtService.isTokenValid(token, usuario)) {
+            if (usuario != null
+                    && Boolean.TRUE.equals(usuario.getAtivo())
+                    && !tokenRevocationService.isRevoked(token)
+                    && jwtService.isTokenValid(token, usuario)) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
                                 usuario,
