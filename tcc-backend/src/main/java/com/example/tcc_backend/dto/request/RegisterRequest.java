@@ -23,7 +23,7 @@ public class RegisterRequest {
     private String senha;
 
     @NotBlank(message = "RA obrigatorio")
-    @Size(max = 30, message = "RA deve ter no maximo 30 caracteres")
+    @Size(max = 20, message = "RA deve ter no maximo 20 caracteres")
     private String ra;
 
     private TipoUsuario tipo;
