@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,22 @@ public class JwtService {
 
     @Value("${jwt.expiration-ms:2592000000}")
     private long expirationMs;
+
+    @PostConstruct
+    void validateConfiguration() {
+        try {
+            byte[] secretBytes = decodeSecret(secret);
+            if (secretBytes.length < 32) {
+                throw new IllegalStateException("JWT_SECRET invalido (minimo 32 bytes)");
+            }
+        } catch (IllegalStateException ex) {
+            throw new IllegalStateException(
+                    "JWT configuracao invalida: defina JWT_SECRET no .env (base64 recomendado). " +
+                            "Arquivos suportados: ./.env, ../.env, ../../.env",
+                    ex
+            );
+        }
+    }
 
     private Key getSecretKey() {
         byte[] secretBytes = decodeSecret(secret);
