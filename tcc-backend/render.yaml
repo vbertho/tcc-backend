@@ -18,7 +18,7 @@ services:
       - key: JWT_EXPIRATION_MS
         value: "2592000000"
       - key: CORS_ALLOWED_ORIGIN_PATTERNS
-        sync: false
+        value: https://front-end-tcc-ten.vercel.app,https://*.vercel.app
       - key: JPA_DDL_AUTO
         value: update
       - key: JPA_SHOW_SQL

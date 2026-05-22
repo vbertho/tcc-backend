@@ -17,7 +17,7 @@ Opcionais:
 
 - `PORT`: porta usada pela aplicacao. No Render ela e definida automaticamente.
 - `DB_SSL_MODE`: use `require` no Supabase/Render e `disable` em PostgreSQL local sem SSL.
-- `CORS_ALLOWED_ORIGIN_PATTERNS`: origens permitidas, separadas por virgula. Exemplo: `https://seu-front.vercel.app,https://*.vercel.app`.
+- `CORS_ALLOWED_ORIGIN_PATTERNS`: origens permitidas, separadas por virgula. Em producao no Render, use `https://front-end-tcc-ten.vercel.app,https://*.vercel.app` para permitir a URL principal e previews da Vercel.
 - `JPA_DDL_AUTO`: padrao `update`.
 - `JPA_SHOW_SQL`: padrao `false`.
 - `JWT_EXPIRATION_MS`: padrao `2592000000`.
@@ -56,7 +56,7 @@ O `Dockerfile` usa Java 21, compila o projeto com Maven e executa o jar gerado.
 1. Crie um novo Web Service no Render.
 2. Selecione deploy via Docker.
 3. Aponte para a raiz deste backend, onde estao `Dockerfile` e `render.yaml`.
-4. Configure as variaveis `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` e `CORS_ALLOWED_ORIGIN_PATTERNS`.
+4. Configure as variaveis `DB_URL`, `DB_USER`, `DB_PASSWORD` e `JWT_SECRET`. O `render.yaml` ja define `CORS_ALLOWED_ORIGIN_PATTERNS` como `https://front-end-tcc-ten.vercel.app,https://*.vercel.app`.
 5. Para Supabase, mantenha SSL com `DB_SSL_MODE=require` ou inclua `?sslmode=require` no `DB_URL`.
 
 O Render define `PORT` automaticamente, e o Spring Boot le essa porta com `server.port=${PORT:8080}`.
