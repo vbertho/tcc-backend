@@ -63,6 +63,15 @@ O Render define `PORT` automaticamente, e o Spring Boot le essa porta com `serve
 
 Depois do primeiro deploy, copie a URL publica gerada pelo Render (por exemplo, `https://seu-servico.onrender.com`) para a configuracao `DESKTOP_API_PROXY_TARGET` do desktop.
 
+## Ping de disponibilidade
+
+O endpoint publico `GET /api/health` responde com `200 OK` sem corpo e sem consultar o banco.
+Para um agendador externo de monitoramento, configure o ping para:
+
+```text
+https://seu-servico.onrender.com/api/health
+```
+
 ## Migracoes manuais do banco
 
 Ao atualizar um banco existente que foi criado antes do perfil administrativo, execute
