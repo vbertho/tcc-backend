@@ -63,6 +63,13 @@ O Render define `PORT` automaticamente, e o Spring Boot le essa porta com `serve
 
 Depois do primeiro deploy, copie a URL publica gerada pelo Render (por exemplo, `https://seu-servico.onrender.com`) para a configuracao `DESKTOP_API_PROXY_TARGET` do desktop.
 
+## Migracoes manuais do banco
+
+Ao atualizar um banco existente que foi criado antes do perfil administrativo, execute
+`docs/migrations/2026-05-26-allow-admin-user-type.sql` uma vez antes de configurar
+`ADMIN_BOOTSTRAP_*`. O script atualiza a restricao da tabela `usuario` para permitir
+os perfis `ALUNO`, `ORIENTADOR` e `ADMIN`.
+
 ## API administrativa
 
 Todas as rotas abaixo exigem JWT de um usuario com tipo `ADMIN`:
