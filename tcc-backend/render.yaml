@@ -20,7 +20,7 @@ services:
       - key: JWT_EXPIRATION_MS
         value: "2592000000"
       - key: CORS_ALLOWED_ORIGIN_PATTERNS
-        value: https://front-end-tcc-ten.vercel.app,https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173
+        value: https://front-end-tcc-ten.vercel.app,https://*.vercel.app
       - key: JPA_DDL_AUTO
         value: update
       - key: JPA_SHOW_SQL

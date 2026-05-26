@@ -17,7 +17,7 @@ Opcionais:
 
 - `PORT`: porta usada pela aplicacao. No Render ela e definida automaticamente.
 - `DB_SSL_MODE`: use `require` no Supabase/Render e `disable` em PostgreSQL local sem SSL.
-- `CORS_ALLOWED_ORIGIN_PATTERNS`: origens permitidas, separadas por virgula. Em producao no Render, mantenha a URL web e inclua `http://localhost:5173,http://127.0.0.1:5173` quando o desktop em desenvolvimento consumir a API hospedada.
+- `CORS_ALLOWED_ORIGIN_PATTERNS`: origens permitidas, separadas por virgula. Em producao no Render, mantenha somente as aplicacoes web publicas permitidas; o desktop em desenvolvimento usa uma proxy local.
 - `JPA_DDL_AUTO`: padrao `update`.
 - `JPA_SHOW_SQL`: padrao `false`.
 - `JWT_EXPIRATION_MS`: padrao `2592000000`.
@@ -61,7 +61,7 @@ O `Dockerfile` usa Java 21, compila o projeto com Maven e executa o jar gerado.
 
 O Render define `PORT` automaticamente, e o Spring Boot le essa porta com `server.port=${PORT:8080}`.
 
-Depois do primeiro deploy, copie a URL publica gerada pelo Render (por exemplo, `https://seu-servico.onrender.com`) para a configuracao `VITE_API_URL` do desktop, acrescentando `/api`.
+Depois do primeiro deploy, copie a URL publica gerada pelo Render (por exemplo, `https://seu-servico.onrender.com`) para a configuracao `DESKTOP_API_PROXY_TARGET` do desktop.
 
 ## API administrativa
 
