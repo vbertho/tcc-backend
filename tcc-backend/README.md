@@ -17,7 +17,7 @@ Opcionais:
 
 - `PORT`: porta usada pela aplicacao. No Render ela e definida automaticamente.
 - `DB_SSL_MODE`: use `require` no Supabase/Render e `disable` em PostgreSQL local sem SSL.
-- `CORS_ALLOWED_ORIGIN_PATTERNS`: origens permitidas, separadas por virgula. Em producao no Render, use `https://front-end-tcc-ten.vercel.app,https://*.vercel.app` para permitir a URL principal e previews da Vercel.
+- `CORS_ALLOWED_ORIGIN_PATTERNS`: origens permitidas, separadas por virgula. Em producao no Render, mantenha a URL web e inclua `http://localhost:5173,http://127.0.0.1:5173` quando o desktop em desenvolvimento consumir a API hospedada.
 - `JPA_DDL_AUTO`: padrao `update`.
 - `JPA_SHOW_SQL`: padrao `false`.
 - `JWT_EXPIRATION_MS`: padrao `2592000000`.
@@ -54,13 +54,14 @@ O `Dockerfile` usa Java 21, compila o projeto com Maven e executa o jar gerado.
 
 ## Deploy no Render
 
-1. Crie um novo Web Service no Render.
-2. Selecione deploy via Docker.
-3. Aponte para a raiz deste backend, onde estao `Dockerfile` e `render.yaml`.
-4. Configure as variaveis `DB_URL`, `DB_USER`, `DB_PASSWORD` e `JWT_SECRET`. O `render.yaml` ja define `CORS_ALLOWED_ORIGIN_PATTERNS` como `https://front-end-tcc-ten.vercel.app,https://*.vercel.app`.
-5. Para Supabase, mantenha SSL com `DB_SSL_MODE=require` ou inclua `?sslmode=require` no `DB_URL`.
+1. No Render, crie um Blueprint a partir deste repositorio e selecione o arquivo `tcc-backend/render.yaml`. Ele ja define a subpasta `tcc-backend` como raiz do servico Docker.
+2. Configure as variaveis secretas `DB_URL`, `DB_USER`, `DB_PASSWORD` e `JWT_SECRET` solicitadas pelo Blueprint.
+3. Para Supabase, mantenha SSL com `DB_SSL_MODE=require` ou inclua `?sslmode=require` no `DB_URL`.
+4. Se preferir criar um Web Service manual, selecione Docker, informe `tcc-backend` como **Root Directory** e copie tambem as variaveis nao secretas do `render.yaml`, especialmente `CORS_ALLOWED_ORIGIN_PATTERNS`.
 
 O Render define `PORT` automaticamente, e o Spring Boot le essa porta com `server.port=${PORT:8080}`.
+
+Depois do primeiro deploy, copie a URL publica gerada pelo Render (por exemplo, `https://seu-servico.onrender.com`) para a configuracao `VITE_API_URL` do desktop, acrescentando `/api`.
 
 ## API administrativa
 
