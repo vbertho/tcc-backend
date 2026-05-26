@@ -18,6 +18,8 @@ public interface InscricaoRepository extends JpaRepository<Inscricao, Integer> {
     List<Inscricao> findByProjetoId(Integer projetoId);
     Page<Inscricao> findByProjetoId(Integer projetoId, Pageable pageable);
     List<Inscricao> findByProjetoIdAndStatus(Integer projetoId, StatusInscricao status);
+    Page<Inscricao> findByStatus(StatusInscricao status, Pageable pageable);
+    long countByStatus(StatusInscricao status);
     Optional<Inscricao> findByProjetoIdAndAlunoUsuarioId(Integer projetoId, Integer usuarioId);
     List<Inscricao> findByProjetoOrientadorUsuarioId(Integer usuarioId);
     long countByProjetoOrientadorUsuarioIdAndStatus(Integer usuarioId, StatusInscricao status);

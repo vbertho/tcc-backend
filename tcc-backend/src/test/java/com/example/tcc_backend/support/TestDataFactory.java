@@ -33,6 +33,18 @@ public final class TestDataFactory {
                 .build();
     }
 
+    public static Usuario usuarioAdmin(Integer id) {
+        return Usuario.builder()
+                .id(id)
+                .nome("Admin Teste")
+                .email("admin" + id + "@teste.com")
+                .senha("senha")
+                .tipo(TipoUsuario.ADMIN)
+                .ativo(true)
+                .dataCadastro(LocalDateTime.now())
+                .build();
+    }
+
     public static Aluno aluno(Integer id, Usuario usuario) {
         return Aluno.builder()
                 .id(id)

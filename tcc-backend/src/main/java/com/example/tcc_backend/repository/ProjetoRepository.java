@@ -16,6 +16,7 @@ import java.util.List;
 public interface ProjetoRepository extends JpaRepository<Projeto, Integer>, JpaSpecificationExecutor<Projeto> {
     List<Projeto> findByStatus(StatusProjeto status);
     Page<Projeto> findByStatus(StatusProjeto status, Pageable pageable);
+    long countByStatus(StatusProjeto status);
     List<Projeto> findByAreaId(Integer areaId);
     Page<Projeto> findByAreaId(Integer areaId, Pageable pageable);
     List<Projeto> findByAreaNomeContainingIgnoreCase(String area);

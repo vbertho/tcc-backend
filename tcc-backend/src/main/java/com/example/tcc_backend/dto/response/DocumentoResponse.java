@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 @Builder
 public class DocumentoResponse {
     private Integer id;
+    private Integer usuarioId;
+    private String usuarioNome;
     private TipoDocumento tipo;
     private StatusDocumento status;
     private String observacaoStatus;
@@ -28,6 +30,8 @@ public class DocumentoResponse {
         }
         return DocumentoResponse.builder()
                 .id(documento.getId())
+                .usuarioId(documento.getUsuario() == null ? null : documento.getUsuario().getId())
+                .usuarioNome(documento.getUsuario() == null ? null : documento.getUsuario().getNome())
                 .tipo(documento.getTipo())
                 .status(documento.getStatus())
                 .observacaoStatus(documento.getObservacaoStatus())

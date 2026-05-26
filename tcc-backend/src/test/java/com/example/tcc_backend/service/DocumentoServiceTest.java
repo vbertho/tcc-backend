@@ -147,6 +147,16 @@ class DocumentoServiceTest {
     }
 
     @Test
+    void listarPorUsuarioDevePermitirAdministrador() {
+        when(authHelper.getCurrentUser()).thenReturn(TestDataFactory.usuarioAdmin(9));
+        when(documentoRepository.findByUsuarioId(2)).thenReturn(java.util.List.of());
+
+        assertThat(documentoService.listarPorUsuario(2)).isEmpty();
+
+        verify(documentoRepository).findByUsuarioId(2);
+    }
+
+    @Test
     void removerDeveNegarQuandoDocumentoForDeOutroUsuario() {
         Usuario dono = TestDataFactory.usuarioAluno(2);
         Usuario usuarioLogado = TestDataFactory.usuarioAluno(1);

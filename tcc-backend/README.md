@@ -21,6 +21,7 @@ Opcionais:
 - `JPA_DDL_AUTO`: padrao `update`.
 - `JPA_SHOW_SQL`: padrao `false`.
 - `JWT_EXPIRATION_MS`: padrao `2592000000`.
+- `ADMIN_BOOTSTRAP_NAME`, `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_PASSWORD`: criam a primeira conta administrativa somente se o email ainda nao existir. A senha deve ter ao menos 8 caracteres.
 
 ## Rodar local
 
@@ -60,3 +61,17 @@ O `Dockerfile` usa Java 21, compila o projeto com Maven e executa o jar gerado.
 5. Para Supabase, mantenha SSL com `DB_SSL_MODE=require` ou inclua `?sslmode=require` no `DB_URL`.
 
 O Render define `PORT` automaticamente, e o Spring Boot le essa porta com `server.port=${PORT:8080}`.
+
+## API administrativa
+
+Todas as rotas abaixo exigem JWT de um usuario com tipo `ADMIN`:
+
+- `GET /api/admin/dashboard`: indicadores e atividade recente.
+- `GET|POST|PUT /api/admin/usuarios` e `PATCH /api/admin/usuarios/{id}/ativo`: gestao de alunos, orientadores e administradores.
+- `GET|POST|PUT|DELETE /api/admin/projetos` e `PATCH /api/admin/projetos/{id}/status`: projetos e oportunidades.
+- `GET|DELETE /api/admin/inscricoes` e `PATCH /api/admin/inscricoes/{id}/status`: moderacao de inscricoes.
+- `GET|DELETE /api/admin/documentos` e `PATCH /api/admin/documentos/{id}/status`: revisao documental; preview e download continuam em `/api/documentos/{id}/...`.
+- `GET|POST|PUT|DELETE /api/admin/areas`: areas de pesquisa.
+- `GET /api/admin/relatorios/resumo`, `GET /api/admin/auditoria` e `GET|PUT /api/admin/configuracoes`: governanca.
+
+Alteracoes administrativas de dados sao registradas em auditoria. Configuracoes aceitam apenas chaves operacionais predefinidas e nao armazenam segredos.

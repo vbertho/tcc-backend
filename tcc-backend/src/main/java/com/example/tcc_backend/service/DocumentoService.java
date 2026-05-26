@@ -3,6 +3,7 @@ package com.example.tcc_backend.service;
 import com.example.tcc_backend.model.Documento;
 import com.example.tcc_backend.model.StatusDocumento;
 import com.example.tcc_backend.model.TipoDocumento;
+import com.example.tcc_backend.model.TipoUsuario;
 import com.example.tcc_backend.model.Usuario;
 import com.example.tcc_backend.repository.DocumentoRepository;
 import com.example.tcc_backend.repository.UsuarioRepository;
@@ -96,7 +97,7 @@ public class DocumentoService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nao autenticado");
         }
 
-        if (!usuarioLogado.getId().equals(usuarioId)) {
+        if (!usuarioLogado.getId().equals(usuarioId) && usuarioLogado.getTipo() != TipoUsuario.ADMIN) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para listar documentos de outro usuario");
         }
         // Removemos a verificação do authHelper que bloqueava o Admin
@@ -116,7 +117,8 @@ public class DocumentoService {
         Documento documento = documentoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento nao encontrado"));
 
-        if (!documento.getUsuario().getId().equals(usuarioLogado.getId())) {
+        if (!documento.getUsuario().getId().equals(usuarioLogado.getId())
+                && usuarioLogado.getTipo() != TipoUsuario.ADMIN) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para acessar este documento");
         }
         return documento;
