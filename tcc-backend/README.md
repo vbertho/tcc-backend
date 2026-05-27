@@ -79,6 +79,10 @@ Ao atualizar um banco existente que foi criado antes do perfil administrativo, e
 `ADMIN_BOOTSTRAP_*`. O script atualiza a restricao da tabela `usuario` para permitir
 os perfis `ALUNO`, `ORIENTADOR` e `ADMIN`.
 
+Se o banco ainda nao possuir cursos e areas de pesquisa, execute
+`docs/migrations/2026-05-27-seed-project-catalogs.sql`. O script e idempotente e
+insere os catalogos iniciais necessarios para cadastro de aluno e criacao de projeto.
+
 ## API administrativa
 
 Todas as rotas abaixo exigem JWT de um usuario com tipo `ADMIN`:

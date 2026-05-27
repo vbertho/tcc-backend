@@ -150,6 +150,7 @@ public class ProjetoService {
     }
 
     public Projeto create(ProjetoRequest dto) {
+        validarDatas(dto);
         Usuario usuarioLogado = authHelper.getCurrentUser();
 
         AreaPesquisa area = areaPesquisaRepository.findById(dto.getAreaId())
@@ -191,6 +192,7 @@ public class ProjetoService {
     }
 
     public Projeto update(Integer id, ProjetoRequest dto) {
+        validarDatas(dto);
         Usuario usuarioLogado = authHelper.getCurrentUser();
         Projeto projeto = findById(id);
 
@@ -326,6 +328,19 @@ public class ProjetoService {
 
         if (!isOrientadorDoProjeto && !isAlunoCriador) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para gerenciar colaboradores deste projeto");
+        }
+    }
+
+    private void validarDatas(ProjetoRequest dto) {
+        if (dto.getDataInicio() != null && dto.getDataFim() != null
+                && dto.getDataFim().isBefore(dto.getDataInicio())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Data de termino deve ser igual ou posterior a data de inicio");
+        }
+        if (dto.getDataLimiteInscricao() != null && dto.getDataFim() != null
+                && dto.getDataLimiteInscricao().isAfter(dto.getDataFim())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Limite de inscricao deve ser igual ou anterior a data de termino");
         }
     }
 }

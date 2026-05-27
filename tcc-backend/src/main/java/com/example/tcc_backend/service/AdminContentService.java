@@ -59,6 +59,7 @@ public class AdminContentService {
     @Transactional
     public ProjetoResponse createProjeto(ProjetoRequest dto) {
         accessService.requireAdmin();
+        validateDates(dto);
         AreaPesquisa area = getArea(dto.getAreaId());
         Projeto projeto = projetoRepository.save(Projeto.builder()
                 .titulo(dto.getTitulo().trim())
@@ -77,6 +78,7 @@ public class AdminContentService {
     @Transactional
     public ProjetoResponse updateProjeto(Integer id, ProjetoRequest dto) {
         accessService.requireAdmin();
+        validateDates(dto);
         Projeto projeto = getProjeto(id);
         projeto.setTitulo(dto.getTitulo().trim());
         projeto.setDescricao(text(dto.getDescricao()));
@@ -213,6 +215,19 @@ public class AdminContentService {
     private void validatePage(int page, int size) {
         if (page < 0 || size < 1) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Paginacao invalida");
+        }
+    }
+
+    private void validateDates(ProjetoRequest dto) {
+        if (dto.getDataInicio() != null && dto.getDataFim() != null
+                && dto.getDataFim().isBefore(dto.getDataInicio())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Data de termino deve ser igual ou posterior a data de inicio");
+        }
+        if (dto.getDataLimiteInscricao() != null && dto.getDataFim() != null
+                && dto.getDataLimiteInscricao().isAfter(dto.getDataFim())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Limite de inscricao deve ser igual ou anterior a data de termino");
         }
     }
 }

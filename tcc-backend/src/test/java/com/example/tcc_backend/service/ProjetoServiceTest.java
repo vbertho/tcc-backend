@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,6 +84,18 @@ class ProjetoServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void createDeveNegarLimiteDeInscricaoDepoisDoTermino() {
+        ProjetoRequest request = requestProjeto();
+        request.setDataFim(LocalDate.of(2026, 7, 30));
+        request.setDataLimiteInscricao(LocalDate.of(2026, 12, 25));
+
+        assertThatThrownBy(() -> projetoService.create(request))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> assertThat(((ResponseStatusException) ex).getReason())
+                        .isEqualTo("Limite de inscricao deve ser igual ou anterior a data de termino"));
     }
 
     @Test
