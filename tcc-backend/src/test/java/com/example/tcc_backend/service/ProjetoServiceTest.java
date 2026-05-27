@@ -26,6 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -73,6 +74,24 @@ class ProjetoServiceTest {
     }
 
     @Test
+    void createDevePermitirOrientadorComoResponsavel() {
+        Usuario usuario = TestDataFactory.usuarioOrientador(2);
+        Orientador orientador = TestDataFactory.orientador(2, usuario);
+        AreaPesquisa area = AreaPesquisa.builder().id(3).nome("IA").build();
+
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+        when(areaPesquisaRepository.findById(3)).thenReturn(Optional.of(area));
+        when(orientadorRepository.findByUsuarioId(2)).thenReturn(Optional.of(orientador));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Projeto projeto = projetoService.create(requestProjeto());
+
+        assertThat(projeto.getOrientador()).isEqualTo(orientador);
+        assertThat(projeto.getAlunoCriador()).isNull();
+        verify(inscricaoRepository, never()).save(any(Inscricao.class));
+    }
+
+    @Test
     void updateDeveNegarUsuarioSemPermissao() {
         Usuario outro = TestDataFactory.usuarioAluno(9);
         Projeto projeto = TestDataFactory.projetoComOrientador(10, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
@@ -84,6 +103,23 @@ class ProjetoServiceTest {
                 .isInstanceOf(ResponseStatusException.class)
                 .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
                 .isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    void updateDevePermitirOrientadorDoProjeto() {
+        Usuario usuario = TestDataFactory.usuarioOrientador(2);
+        Orientador orientador = TestDataFactory.orientador(2, usuario);
+        Projeto projeto = TestDataFactory.projetoComOrientador(10, orientador);
+        AreaPesquisa area = AreaPesquisa.builder().id(3).nome("IA").build();
+
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+        when(projetoRepository.findById(10)).thenReturn(Optional.of(projeto));
+        when(areaPesquisaRepository.findById(3)).thenReturn(Optional.of(area));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Projeto atualizado = projetoService.update(10, requestProjeto());
+
+        assertThat(atualizado.getOrientador()).isEqualTo(orientador);
     }
 
     @Test
@@ -137,6 +173,22 @@ class ProjetoServiceTest {
                 "/projetos/10",
                 "Projeto 10"
         );
+    }
+
+    @Test
+    void recrutarDeveNegarOrientadorQueNaoGerenciaProjeto() {
+        Usuario gestor = TestDataFactory.usuarioOrientador(9);
+        Projeto projeto = TestDataFactory.projetoComOrientador(10, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
+
+        when(authHelper.getCurrentUser()).thenReturn(gestor);
+        when(projetoRepository.findById(10)).thenReturn(Optional.of(projeto));
+
+        assertThatThrownBy(() -> projetoService.recrutar(10, 3))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+
+        verify(usuarioRepository, never()).findById(3);
     }
 
     @Test

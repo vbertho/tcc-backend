@@ -22,7 +22,6 @@ public class RegisterRequest {
     @Size(min = 8, max = 72, message = "Senha deve ter entre 8 e 72 caracteres")
     private String senha;
 
-    @NotBlank(message = "RA obrigatorio")
     @Size(max = 20, message = "RA deve ter no maximo 20 caracteres")
     private String ra;
 

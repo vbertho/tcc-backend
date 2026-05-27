@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -122,6 +123,24 @@ class InscricaoServiceTest {
                 "/usuarios/me/inscricoes",
                 "Projeto 10"
         );
+    }
+
+    @Test
+    void aprovarDeveNegarOrientadorDeOutroProjeto() {
+        Usuario outroOrientador = TestDataFactory.usuarioOrientador(9);
+        Usuario alunoUsuario = TestDataFactory.usuarioAluno(1);
+        Projeto projeto = TestDataFactory.projetoComOrientador(10, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
+        Inscricao inscricao = TestDataFactory.inscricaoAprovada(5, TestDataFactory.aluno(1, alunoUsuario), projeto);
+
+        when(authHelper.getCurrentUser()).thenReturn(outroOrientador);
+        when(inscricaoRepository.findById(5)).thenReturn(Optional.of(inscricao));
+
+        assertThatThrownBy(() -> inscricaoService.aprovar(5))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+
+        verify(inscricaoRepository, never()).save(any(Inscricao.class));
     }
 
     @Test

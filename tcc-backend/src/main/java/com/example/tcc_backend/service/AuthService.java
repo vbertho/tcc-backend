@@ -61,13 +61,12 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest dto) {
         TipoUsuario tipoSolicitado = dto.getTipo() == null ? TipoUsuario.ALUNO : dto.getTipo();
-        if (tipoSolicitado != TipoUsuario.ALUNO) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cadastro publico disponivel apenas para alunos");
+        if (tipoSolicitado == TipoUsuario.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cadastro publico nao permite administradores");
         }
 
         String nome = dto.getNome().trim();
         String email = dto.getEmail().trim().toLowerCase();
-        String ra = dto.getRa().trim();
 
         if (usuarioRepository.existsByEmail(email)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email ja cadastrado");
@@ -77,7 +76,7 @@ public class AuthService {
                 .nome(nome)
                 .email(email)
                 .senha(passwordEncoder.encode(dto.getSenha()))
-                .tipo(TipoUsuario.ALUNO)
+                .tipo(tipoSolicitado)
                 .instituicao(normalizarTexto(dto.getInstituicao()))
                 .bio(normalizarTexto(dto.getBio()))
                 .tema("sistema")
@@ -86,19 +85,31 @@ public class AuthService {
 
         usuarioRepository.save(usuario);
 
-        Curso curso = dto.getCursoId() == null ? null : cursoRepository.findById(dto.getCursoId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso nao encontrado"));
+        if (tipoSolicitado == TipoUsuario.ALUNO) {
+            String ra = normalizarObrigatorio(dto.getRa(), "RA obrigatorio para alunos");
+            Curso curso = dto.getCursoId() == null ? null : cursoRepository.findById(dto.getCursoId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Curso nao encontrado"));
 
-        Aluno aluno = Aluno.builder()
+            Aluno aluno = Aluno.builder()
+                    .usuario(usuario)
+                    .ra(ra)
+                    .semestre(dto.getSemestre())
+                    .curso(curso)
+                    .interesses(normalizarTexto(dto.getInteresses()))
+                    .build();
+            alunoRepository.save(aluno);
+
+            return new AuthResponse(jwtService.generateToken(usuario), UsuarioProfileResponse.from(usuario, aluno, null));
+        }
+
+        Orientador orientador = Orientador.builder()
                 .usuario(usuario)
-                .ra(ra)
-                .semestre(dto.getSemestre())
-                .curso(curso)
-                .interesses(normalizarTexto(dto.getInteresses()))
+                .departamento(normalizarObrigatorio(dto.getDepartamento(), "Departamento obrigatorio para orientadores"))
+                .titulacao(normalizarObrigatorio(dto.getTitulacao(), "Titulacao obrigatoria para orientadores"))
                 .build();
-        alunoRepository.save(aluno);
+        orientadorRepository.save(orientador);
 
-        return new AuthResponse(jwtService.generateToken(usuario), UsuarioProfileResponse.from(usuario, aluno, null));
+        return new AuthResponse(jwtService.generateToken(usuario), UsuarioProfileResponse.from(usuario, null, orientador));
     }
 
     public AuthResponse login(LoginRequest dto) {
@@ -152,5 +163,13 @@ public class AuthService {
         }
         String normalizado = valor.trim();
         return normalizado.isEmpty() ? null : normalizado;
+    }
+
+    private String normalizarObrigatorio(String valor, String mensagem) {
+        String normalizado = normalizarTexto(valor);
+        if (normalizado == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, mensagem);
+        }
+        return normalizado;
     }
 }
