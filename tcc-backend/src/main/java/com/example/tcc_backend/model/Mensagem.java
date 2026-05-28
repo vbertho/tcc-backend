@@ -7,6 +7,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "mensagem")
@@ -36,18 +37,18 @@ public class Mensagem {
     private String conteudo;
 
     @Column(name = "data_envio")
-    private LocalDateTime dataEnvio;
+    private OffsetDateTime dataEnvio;
 
     @Builder.Default
     @Column(name = "editada", nullable = false)
     private Boolean editada = false;
 
     @Column(name = "data_edicao")
-    private LocalDateTime dataEdicao;
+    private OffsetDateTime dataEdicao;
 
     @PrePersist
     public void prePersist() {
-        this.dataEnvio = LocalDateTime.now();
+        this.dataEnvio = OffsetDateTime.now();
         if (this.editada == null) this.editada = false;
     }
 }

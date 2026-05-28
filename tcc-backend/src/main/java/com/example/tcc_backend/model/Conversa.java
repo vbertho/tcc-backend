@@ -6,6 +6,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,10 +48,10 @@ public class Conversa {
     private List<Mensagem> mensagens = new ArrayList<>();
 
     @Column(name = "data_criacao")
-    private LocalDateTime dataCriacao;
+    private OffsetDateTime dataCriacao;
 
     @PrePersist
     public void prePersist() {
-        this.dataCriacao = LocalDateTime.now();
+        this.dataCriacao = OffsetDateTime.now();
     }
 }

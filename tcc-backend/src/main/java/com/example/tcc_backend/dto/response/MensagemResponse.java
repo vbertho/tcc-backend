@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -17,11 +17,11 @@ public class MensagemResponse {
     private Integer id;
     private Integer conversaId;
     private String conteudo;
-    private LocalDateTime dataEnvio;
+    private OffsetDateTime dataEnvio;
     private Integer remetenteId;
     private String remetenteNome;
     private Boolean editada;
-    private LocalDateTime dataEdicao;
+    private OffsetDateTime dataEdicao;
 
     public static MensagemResponse fromEntity(Mensagem mensagem) {
         return MensagemResponse.builder()
