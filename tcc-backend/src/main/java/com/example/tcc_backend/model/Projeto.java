@@ -32,6 +32,9 @@ public class Projeto {
     @Column(name = "requisitos", columnDefinition = "TEXT")
     private String requisitos;
 
+    @Column(name = "tecnologias", columnDefinition = "TEXT")
+    private String tecnologias;
+
     @Column(name = "vagas")
     private Integer vagas;
 

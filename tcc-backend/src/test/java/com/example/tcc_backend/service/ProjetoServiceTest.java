@@ -88,6 +88,7 @@ class ProjetoServiceTest {
 
         assertThat(projeto.getOrientador()).isEqualTo(orientador);
         assertThat(projeto.getAlunoCriador()).isNull();
+        assertThat(projeto.getTecnologias()).isEqualTo("React, Spring");
         verify(inscricaoRepository, never()).save(any(Inscricao.class));
     }
 
@@ -120,6 +121,7 @@ class ProjetoServiceTest {
         Projeto atualizado = projetoService.update(10, requestProjeto());
 
         assertThat(atualizado.getOrientador()).isEqualTo(orientador);
+        assertThat(atualizado.getTecnologias()).isEqualTo("React, Spring");
     }
 
     @Test
@@ -235,6 +237,7 @@ class ProjetoServiceTest {
         request.setTitulo("Projeto");
         request.setDescricao("Descricao");
         request.setRequisitos("Java");
+        request.setTecnologias("React, Spring");
         request.setVagas(2);
         request.setAreaId(3);
         return request;

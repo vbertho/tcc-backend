@@ -65,6 +65,7 @@ public class AdminContentService {
                 .titulo(dto.getTitulo().trim())
                 .descricao(text(dto.getDescricao()))
                 .requisitos(text(dto.getRequisitos()))
+                .tecnologias(text(dto.getTecnologias()))
                 .vagas(dto.getVagas())
                 .dataInicio(dto.getDataInicio())
                 .dataFim(dto.getDataFim())
@@ -83,6 +84,7 @@ public class AdminContentService {
         projeto.setTitulo(dto.getTitulo().trim());
         projeto.setDescricao(text(dto.getDescricao()));
         projeto.setRequisitos(text(dto.getRequisitos()));
+        projeto.setTecnologias(text(dto.getTecnologias()));
         projeto.setVagas(dto.getVagas());
         projeto.setDataInicio(dto.getDataInicio());
         projeto.setDataFim(dto.getDataFim());
