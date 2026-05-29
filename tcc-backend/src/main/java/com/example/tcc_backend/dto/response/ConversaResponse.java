@@ -9,7 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 public class ConversaResponse {
 
     private Integer id;
-    private LocalDateTime dataCriacao;
+    private OffsetDateTime dataCriacao;
     private String tipo;
 
     // Campos de grupo (nullable para privadas)
@@ -38,7 +38,7 @@ public class ConversaResponse {
 
     // Última mensagem
     private String ultimaMensagem;
-    private LocalDateTime ultimaMensagemHorario;
+    private OffsetDateTime ultimaMensagemHorario;
 
     public static ConversaResponse fromEntity(Conversa conversa, Integer usuarioLogadoId) {
         ConversaResponseBuilder builder = ConversaResponse.builder()

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @Service
@@ -247,7 +248,7 @@ public class ConversaService {
 
         mensagem.setConteudo(novoConteudo);
         mensagem.setEditada(true);
-        mensagem.setDataEdicao(LocalDateTime.now());
+        mensagem.setDataEdicao(OffsetDateTime.now());
 
         return MensagemResponse.fromEntity(mensagemRepository.save(mensagem));
     }
