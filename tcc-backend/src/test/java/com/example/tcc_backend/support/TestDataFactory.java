@@ -3,6 +3,7 @@ package com.example.tcc_backend.support;
 import com.example.tcc_backend.model.*;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public final class TestDataFactory {
 
@@ -144,7 +145,7 @@ public final class TestDataFactory {
         return Conversa.builder()
                 .id(id)
                 .projeto(projeto)
-                .dataCriacao(LocalDateTime.now())
+                .dataCriacao(OffsetDateTime.now())
                 .build();
     }
 
@@ -154,7 +155,7 @@ public final class TestDataFactory {
                 .conversa(conversa)
                 .remetente(remetente)
                 .conteudo("Mensagem de teste")
-                .dataEnvio(LocalDateTime.now())
+                .dataEnvio(OffsetDateTime.now())
                 .build();
     }
 }
