@@ -20,6 +20,7 @@ public class ProjetoResponse {
     private String titulo;
     private String descricao;
     private String requisitos;
+    private String tecnologias;
     private Integer vagas;
     private StatusProjeto status;
     private LocalDateTime dataCriacao;
@@ -40,6 +41,7 @@ public class ProjetoResponse {
                 .titulo(projeto.getTitulo())
                 .descricao(projeto.getDescricao())
                 .requisitos(projeto.getRequisitos())
+                .tecnologias(projeto.getTecnologias())
                 .vagas(projeto.getVagas())
                 .status(projeto.getStatus())
                 .dataCriacao(projeto.getDataCriacao())

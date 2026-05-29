@@ -17,6 +17,7 @@ public class ProjetoRequest {
 
     private String descricao;
     private String requisitos;
+    private String tecnologias;
 
     @NotNull(message = "Vagas é obrigatório")
     private Integer vagas;
