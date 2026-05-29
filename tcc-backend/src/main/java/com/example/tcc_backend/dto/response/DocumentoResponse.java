@@ -19,6 +19,7 @@ public class DocumentoResponse {
     private StatusDocumento status;
     private String observacaoStatus;
     private String nomeArquivo;
+    private String url;
     private LocalDateTime dataEnvio;
     private String downloadUrl;
     private String previewUrl;
@@ -28,6 +29,9 @@ public class DocumentoResponse {
         if (nome == null || nome.isBlank()) {
             nome = Path.of(documento.getCaminho()).getFileName().toString();
         }
+        String url = documento.getCaminho() != null && documento.getCaminho().startsWith("http")
+                ? documento.getCaminho()
+                : null;
         return DocumentoResponse.builder()
                 .id(documento.getId())
                 .usuarioId(documento.getUsuario() == null ? null : documento.getUsuario().getId())
@@ -36,6 +40,7 @@ public class DocumentoResponse {
                 .status(documento.getStatus())
                 .observacaoStatus(documento.getObservacaoStatus())
                 .nomeArquivo(nome)
+                .url(url)
                 .dataEnvio(documento.getDataEnvio())
                 .downloadUrl("/api/documentos/" + documento.getId() + "/download")
                 .previewUrl("/api/documentos/" + documento.getId() + "/preview")

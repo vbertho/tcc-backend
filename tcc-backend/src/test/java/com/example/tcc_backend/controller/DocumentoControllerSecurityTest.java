@@ -11,17 +11,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.nio.file.Path;
-
-import static org.mockito.ArgumentMatchers.any;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,30 +37,32 @@ class DocumentoControllerSecurityTest {
 
     @Test
     void uploadDeveRetornarNomeOriginalNoResponseNaoONomeFisicoUUID() throws Exception {
-        var usuario = TestDataFactory.usuarioAluno(1);
-
-        // Caminho fisico (UUID.ext), nomeArquivo e o original que queremos exibir no front.
+        String url = "https://qqusyyzkroensiazmslf.supabase.co/storage/v1/object/public/documents/usuarios/1/8b12c5bf.pdf";
         Documento documento = Documento.builder()
                 .id(1)
-                .usuario(usuario)
+                .usuario(TestDataFactory.usuarioAluno(1))
                 .tipo(TipoDocumento.CURRICULO)
-                .caminho("uploads/documentos/1/8b12c5bf-6a5b-4f04-9fa5-6b0a7d7b3c4a.pdf")
+                .caminho(url)
                 .nomeArquivo("curriculo_do_joao.pdf")
                 .build();
 
-        when(documentoService.upload(eq(1), eq(TipoDocumento.CURRICULO), any())).thenReturn(documento);
+        when(documentoService.upload(
+                eq(1),
+                eq(TipoDocumento.CURRICULO),
+                eq("curriculo_do_joao.pdf"),
+                eq(url)
+        )).thenReturn(documento);
 
-        MockMultipartFile arquivo = new MockMultipartFile(
-                "arquivo",
-                "curriculo_do_joao.pdf",
-                "application/pdf",
-                "conteudo".getBytes()
-        );
-
-        mockMvc.perform(multipart("/api/documentos/upload")
-                        .param("usuarioId", "1")
-                        .param("tipo", "CURRICULO")
-                        .file(arquivo))
+        mockMvc.perform(post("/api/documentos/upload")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "usuarioId": 1,
+                                  "tipo": "CURRICULO",
+                                  "nomeArquivo": "curriculo_do_joao.pdf",
+                                  "url": "%s"
+                                }
+                                """.formatted(url)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.tipo").value("CURRICULO"))
@@ -71,34 +70,22 @@ class DocumentoControllerSecurityTest {
     }
 
     @Test
-    void previewDocxDeveResponderComContentTypeDocx() throws Exception {
-        when(documentoService.obterDocumento(1)).thenReturn(Documento.builder().id(1).nomeArquivo("arquivo.docx").build());
-        when(documentoService.obterArquivo(1))
-                .thenReturn(Path.of("uploads/documentos/1/arquivo.docx"));
+    void downloadDeveRedirecionarParaUrlDoSupabase() throws Exception {
+        String url = "https://qqusyyzkroensiazmslf.supabase.co/storage/v1/object/public/documents/usuarios/1/arquivo.pdf";
+        when(documentoService.obterUrlDocumento(1)).thenReturn(url);
 
-        mockMvc.perform(get("/api/documentos/1/preview"))
-                .andExpect(status().isUnsupportedMediaType());
+        mockMvc.perform(get("/api/documentos/1/download"))
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", is(url)));
     }
 
     @Test
-    void previewDocDeveResponderComContentTypeDoc() throws Exception {
-        when(documentoService.obterDocumento(2)).thenReturn(Documento.builder().id(2).nomeArquivo("arquivo.doc").build());
-        when(documentoService.obterArquivo(2))
-                .thenReturn(Path.of("uploads/documentos/1/arquivo.doc"));
-
-        mockMvc.perform(get("/api/documentos/2/preview"))
-                .andExpect(status().isUnsupportedMediaType());
-    }
-
-    @Test
-    void previewPdfDeveResponderComContentTypePdf() throws Exception {
-        Path tmp = java.nio.file.Files.createTempFile("documento-preview-", ".pdf");
-        java.nio.file.Files.writeString(tmp, "%PDF-1.7\nx");
-        when(documentoService.obterDocumento(3)).thenReturn(Documento.builder().id(3).nomeArquivo("arquivo.pdf").build());
-        when(documentoService.obterArquivo(3)).thenReturn(tmp);
+    void previewDeveRedirecionarParaUrlDoSupabase() throws Exception {
+        String url = "https://qqusyyzkroensiazmslf.supabase.co/storage/v1/object/public/documents/usuarios/1/arquivo.pdf";
+        when(documentoService.obterUrlDocumento(3)).thenReturn(url);
 
         mockMvc.perform(get("/api/documentos/3/preview"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", is(url)));
     }
 }

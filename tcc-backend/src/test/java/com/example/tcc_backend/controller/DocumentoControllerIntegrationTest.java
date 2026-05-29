@@ -10,16 +10,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,21 +39,32 @@ class DocumentoControllerIntegrationTest {
 
     @Test
     void uploadDeveRetornarDocumentoResponse() throws Exception {
-        Documento documento = TestDataFactory.documento(1, TestDataFactory.usuarioAluno(1), "uploads/documentos/1/arquivo.pdf");
-        MockMultipartFile arquivo = new MockMultipartFile("arquivo", "arquivo.pdf", "application/pdf", "conteudo".getBytes());
+        String url = "https://qqusyyzkroensiazmslf.supabase.co/storage/v1/object/public/documents/usuarios/1/arquivo.pdf";
+        Documento documento = TestDataFactory.documento(1, TestDataFactory.usuarioAluno(1), url);
+        documento.setNomeArquivo("arquivo.pdf");
 
-        // CORREÇÃO 1: Adicione o eq(1) como primeiro parâmetro do mock para simular o usuarioId
-        when(documentoService.upload(eq(1), eq(TipoDocumento.CURRICULO), any())).thenReturn(documento);
+        when(documentoService.upload(
+                eq(1),
+                eq(TipoDocumento.CURRICULO),
+                eq("arquivo.pdf"),
+                eq(url)
+        )).thenReturn(documento);
 
-        mockMvc.perform(multipart("/api/documentos/upload")
-                        .file(arquivo)
-                        // CORREÇÃO 2: Envie o parâmetro 'usuarioId' na requisição simulada
-                        .param("usuarioId", "1")
-                        .param("tipo", "CURRICULO"))
+        mockMvc.perform(post("/api/documentos/upload")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "usuarioId": 1,
+                                  "tipo": "CURRICULO",
+                                  "nomeArquivo": "arquivo.pdf",
+                                  "url": "%s"
+                                }
+                                """.formatted(url)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.tipo").value("CURRICULO"))
-                .andExpect(jsonPath("$.nomeArquivo").value("arquivo.pdf"));
+                .andExpect(jsonPath("$.nomeArquivo").value("arquivo.pdf"))
+                .andExpect(jsonPath("$.url").value(url));
     }
 
     @Test
@@ -64,11 +76,12 @@ class DocumentoControllerIntegrationTest {
     }
 
     @Test
-    void previewDeveNegarQuandoNaoForPdf() throws Exception {
-        when(documentoService.obterDocumento(1)).thenReturn(Documento.builder().id(1).nomeArquivo("arquivo.docx").build());
-        when(documentoService.obterArquivo(1)).thenReturn(java.nio.file.Path.of("uploads/documentos/1/arquivo.docx"));
+    void previewDeveRedirecionarParaUrlDoDocumento() throws Exception {
+        String url = "https://qqusyyzkroensiazmslf.supabase.co/storage/v1/object/public/documents/usuarios/1/arquivo.png";
+        when(documentoService.obterUrlDocumento(1)).thenReturn(url);
 
         mockMvc.perform(get("/api/documentos/1/preview"))
-                .andExpect(status().isUnsupportedMediaType());
+                .andExpect(status().isFound())
+                .andExpect(header().string("Location", is(url)));
     }
 }

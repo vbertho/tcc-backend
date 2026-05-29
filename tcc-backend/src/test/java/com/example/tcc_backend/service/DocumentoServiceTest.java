@@ -75,6 +75,36 @@ class DocumentoServiceTest {
     }
 
     @Test
+    void uploadComUrlDeveSalvarMetadadosSemArquivoFisico() {
+        Usuario usuario = TestDataFactory.usuarioAluno(1);
+        String url = "https://qqusyyzkroensiazmslf.supabase.co/storage/v1/object/public/documents/usuarios/1/curriculo.pdf";
+
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario));
+        when(documentoRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Documento documento = documentoService.upload(1, TipoDocumento.CURRICULO, "curriculo.pdf", url);
+
+        assertThat(documento.getUsuario()).isEqualTo(usuario);
+        assertThat(documento.getTipo()).isEqualTo(TipoDocumento.CURRICULO);
+        assertThat(documento.getNomeArquivo()).isEqualTo("curriculo.pdf");
+        assertThat(documento.getCaminho()).isEqualTo(url);
+
+        verify(documentoRepository).save(any());
+    }
+
+    @Test
+    void uploadComUrlDeveNegarUrlForaDoSupabase() {
+        Usuario usuario = TestDataFactory.usuarioAluno(1);
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+
+        assertThatThrownBy(() -> documentoService.upload(1, TipoDocumento.CURRICULO, "curriculo.pdf", "https://example.com/curriculo.pdf"))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void uploadDeveNegarTipoDeArquivoInvalido() {
         Usuario usuario = TestDataFactory.usuarioAluno(1);
         MockMultipartFile arquivo = new MockMultipartFile(

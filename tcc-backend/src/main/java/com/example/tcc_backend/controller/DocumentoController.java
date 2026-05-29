@@ -1,31 +1,30 @@
 package com.example.tcc_backend.controller;
 
+import com.example.tcc_backend.dto.request.DocumentoUploadRequest;
 import com.example.tcc_backend.dto.response.DocumentoResponse;
-import com.example.tcc_backend.model.TipoDocumento;
 import com.example.tcc_backend.service.DocumentoService;
-
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.*;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.multipart.MultipartException;
-import org.springframework.web.server.ResponseStatusException;
-
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
-import java.nio.file.Path;
-import java.nio.file.Files;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
 import java.util.List;
-import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/documentos")
@@ -35,93 +34,49 @@ public class DocumentoController {
 
     private final DocumentoService documentoService;
 
-    @Operation(summary = "Upload de documento", description = "Realiza upload de um arquivo para um usuário.")
+    @Operation(summary = "Upload de documento", description = "Salva os metadados de um documento enviado ao Supabase Storage.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Arquivo enviado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos")
+            @ApiResponse(responseCode = "201", description = "Documento registrado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados invalidos")
     })
-    @PostMapping("/upload")
-    public ResponseEntity<DocumentoResponse> upload(
-            @RequestParam("usuarioId") Integer id_usuario,
-            @RequestParam("tipo") TipoDocumento tipo,
-            @RequestParam("arquivo") MultipartFile arquivo) {
-
+    @PostMapping(value = "/upload", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DocumentoResponse> upload(@RequestBody @Valid DocumentoUploadRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(DocumentoResponse.fromEntity(documentoService.upload(id_usuario, tipo, arquivo)));
+                .body(DocumentoResponse.fromEntity(documentoService.upload(
+                        request.getUsuarioId(),
+                        request.getTipo(),
+                        request.getNomeArquivo(),
+                        request.getUrl()
+                )));
     }
 
-    @Operation(summary = "Download de documento", description = "Realiza o download de um arquivo.")
+    @Operation(summary = "Download de documento", description = "Redireciona para a URL publica do documento no Supabase.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Download realizado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Arquivo não encontrado")
+            @ApiResponse(responseCode = "302", description = "Redirecionamento realizado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Documento nao encontrado")
     })
     @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> download(@PathVariable Integer id) {
-        var documento = documentoService.obterDocumento(id);
-        Path arquivo = documentoService.obterArquivo(id);
-        byte[] bytes;
-        try {
-            bytes = Files.readAllBytes(arquivo);
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo nÃ£o encontrado");
-        }
-
-        String filename = documento.getNomeArquivo();
-        if (filename == null || filename.isBlank()) {
-            filename = arquivo.getFileName().toString();
-        }
-        MediaType mediaType = inferMediaType(filename);
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.attachment().filename(filename, StandardCharsets.UTF_8).build().toString())
-                .header("X-Content-Type-Options", "nosniff")
-                .contentType(mediaType)
-                .body(bytes);
+    public ResponseEntity<Void> download(@PathVariable Integer id) {
+        String url = documentoService.obterUrlDocumento(id);
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(url))
+                .build();
     }
 
-    @Operation(summary = "Preview de documento", description = "Visualiza o arquivo diretamente no navegador.")
+    @Operation(summary = "Preview de documento", description = "Redireciona para a URL publica do documento no Supabase.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Preview gerado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Arquivo não encontrado")
+            @ApiResponse(responseCode = "302", description = "Redirecionamento realizado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Documento nao encontrado")
     })
     @GetMapping("/{id}/preview")
-    public ResponseEntity<byte[]> preview(@PathVariable Integer id) {
-        var documento = documentoService.obterDocumento(id);
-        Path arquivo = documentoService.obterArquivo(id);
-        String name = (documento.getNomeArquivo() == null || documento.getNomeArquivo().isBlank())
-                ? arquivo.getFileName().toString()
-                : documento.getNomeArquivo();
-        String lower = name.toLowerCase(Locale.ROOT);
-        if (!lower.endsWith(".pdf")) {
-            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Preview somente PDF");
-        }
-        byte[] bytes;
-        try {
-            bytes = Files.readAllBytes(arquivo);
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Arquivo nÃ£o encontrado");
-        }
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.inline().filename(name, StandardCharsets.UTF_8).build().toString())
-                .header("X-Content-Type-Options", "nosniff")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(bytes);
+    public ResponseEntity<Void> preview(@PathVariable Integer id) {
+        String url = documentoService.obterUrlDocumento(id);
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(url))
+                .build();
     }
 
-    private MediaType inferMediaType(String filename) {
-        String name = filename == null ? "" : filename.toLowerCase(Locale.ROOT);
-        if (name.endsWith(".pdf")) return MediaType.APPLICATION_PDF;
-        if (name.endsWith(".doc")) return MediaType.parseMediaType("application/msword");
-        if (name.endsWith(".docx")) {
-            return MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-        }
-        return MediaType.APPLICATION_OCTET_STREAM;
-    }
-
-    @Operation(summary = "Listar documentos do usuário", description = "Retorna todos os documentos de um usuário.")
+    @Operation(summary = "Listar documentos do usuario", description = "Retorna todos os documentos de um usuario.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso")
     })
@@ -138,7 +93,7 @@ public class DocumentoController {
     @Operation(summary = "Remover documento", description = "Remove um documento do sistema.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Documento removido com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Documento não encontrado")
+            @ApiResponse(responseCode = "404", description = "Documento nao encontrado")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {

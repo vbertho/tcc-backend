@@ -16,6 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -87,6 +89,45 @@ public class DocumentoService {
         return documentoRepository.save(documento);
     }
 
+    public Documento upload(Integer usuarioId, TipoDocumento tipo, String nomeArquivo, String url) {
+        if (usuarioId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "usuarioId obrigatorio");
+        }
+
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        if (usuarioLogado == null || usuarioLogado.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nao autenticado");
+        }
+
+        if (!usuarioLogado.getId().equals(usuarioId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para enviar documento para outro usuario");
+        }
+
+        if (tipo == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo do documento obrigatorio");
+        }
+
+        String nomeSeguro = sanitizarNomeOriginal(nomeArquivo);
+        if (nomeSeguro == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "nomeArquivo obrigatorio");
+        }
+
+        String urlValidada = validarUrlDocumento(url);
+
+        Usuario usuarioAlvo = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+
+        Documento documento = Documento.builder()
+                .usuario(usuarioAlvo)
+                .tipo(tipo)
+                .nomeArquivo(nomeSeguro)
+                .status(StatusDocumento.ENVIADO)
+                .caminho(urlValidada)
+                .build();
+
+        return documentoRepository.save(documento);
+    }
+
     public List<Documento> listarPorUsuario(Integer usuarioId) {
         if (usuarioId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "usuarioId obrigatorio");
@@ -108,7 +149,9 @@ public class DocumentoService {
     public void remover(Integer id) {
         Documento documento = buscarDocumentoDoUsuario(id);
 
-        apagarArquivo(documento.getCaminho());
+        if (!isRemoteUrl(documento.getCaminho())) {
+            apagarArquivo(documento.getCaminho());
+        }
         documentoRepository.delete(documento);
     }
 
@@ -139,6 +182,15 @@ public class DocumentoService {
 
     public Documento obterDocumento(Integer id) {
         return buscarDocumentoDoUsuario(id);
+    }
+
+    public String obterUrlDocumento(Integer id) {
+        Documento documento = buscarDocumentoDoUsuario(id);
+        String url = documento.getCaminho();
+        if (!isRemoteUrl(url)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "URL do documento nao encontrada");
+        }
+        return url;
     }
 
     private String salvarArquivo(Usuario usuario, MultipartFile arquivo) {
@@ -219,6 +271,42 @@ public class DocumentoService {
         String cleaned = base.replaceAll("[\\p{Cntrl}]", "").trim();
         if (cleaned.isEmpty()) return null;
         return cleaned.length() > 255 ? cleaned.substring(0, 255) : cleaned;
+    }
+
+    private String validarUrlDocumento(String url) {
+        if (url == null || url.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "url obrigatoria");
+        }
+
+        String cleaned = url.trim();
+        if (cleaned.length() > 1000) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "url muito longa");
+        }
+
+        URI uri;
+        try {
+            uri = new URI(cleaned);
+        } catch (URISyntaxException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "url invalida");
+        }
+
+        String scheme = uri.getScheme();
+        String host = uri.getHost();
+        if (!"https".equalsIgnoreCase(scheme) || host == null || !host.toLowerCase(Locale.ROOT).endsWith(".supabase.co")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "url do documento invalida");
+        }
+
+        return cleaned;
+    }
+
+    private boolean isRemoteUrl(String caminho) {
+        if (caminho == null || caminho.isBlank()) return false;
+        try {
+            URI uri = new URI(caminho);
+            return "http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme());
+        } catch (URISyntaxException e) {
+            return false;
+        }
     }
 
     private void apagarArquivo(String caminho) {

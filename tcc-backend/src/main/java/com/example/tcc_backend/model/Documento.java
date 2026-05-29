@@ -38,10 +38,9 @@ public class Documento {
     private String observacaoStatus;
 
     @NotBlank
-    @Column(name = "caminho", nullable = false, length = 500)
+    @Column(name = "caminho", nullable = false, length = 1000)
     private String caminho;
 
-    // ⬇️ ADICIONE ESTAS DUAS LINHAS AQUI ⬇️
     @Column(name = "nome_arquivo", length = 255)
     private String nomeArquivo;
 
