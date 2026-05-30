@@ -61,9 +61,10 @@ public class UsuarioService {
     }
 
     public Usuario findById(Integer id) {
-        validarAcessoAoUsuario(id, true);
-        return usuarioRepository.findById(id)
+        Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+        validarAcessoAoUsuario(usuario, true);
+        return usuario;
     }
 
     public UsuarioProfileResponse me() {
@@ -134,24 +135,39 @@ public class UsuarioService {
     }
 
     public List<Projeto> findProjetosByUsuario(Integer id) {
-        validarAcessoAoUsuario(id, true);
-        findById(id);
+        Usuario usuario = findById(id);
+        if (usuario.getTipo() == TipoUsuario.ALUNO) {
+            return projetoRepository.findRelacionadosAoUsuario(id);
+        }
         return projetoRepository.findByOrientadorUsuarioIdOrAlunoCriadorUsuarioId(id, id);
     }
 
     public List<Inscricao> findInscricoesByUsuario(Integer id) {
-        validarAcessoAoUsuario(id, false);
-        Usuario usuario = findById(id);
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+        validarAcessoRestritoAoUsuario(id);
         if (usuario.getTipo() == TipoUsuario.ALUNO) {
             return inscricaoRepository.findByAlunoUsuarioId(id);
         }
         return inscricaoRepository.findByProjetoOrientadorUsuarioId(id);
     }
 
-    private void validarAcessoAoUsuario(Integer id, boolean permitirOrientador) {
+    private void validarAcessoRestritoAoUsuario(Integer id) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        if (usuarioLogado.getId().equals(id) || usuarioLogado.getTipo() == TipoUsuario.ORIENTADOR) {
+            return;
+        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para acessar dados de outro usuario");
+    }
+
+    private void validarAcessoAoUsuario(Usuario usuario, boolean permitirOrientador) {
         Usuario usuarioLogado = authHelper.getCurrentUser();
 
-        if (usuarioLogado.getId().equals(id)) {
+        if (usuarioLogado.getId().equals(usuario.getId())) {
+            return;
+        }
+
+        if (usuario.getTipo() == TipoUsuario.ALUNO) {
             return;
         }
 

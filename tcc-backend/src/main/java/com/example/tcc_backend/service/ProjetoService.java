@@ -143,6 +143,9 @@ public class ProjetoService {
 
     public Page<Projeto> findMeusProjetos(Pageable pageable) {
         Usuario usuarioLogado = authHelper.getCurrentUser();
+        if (usuarioLogado.getTipo() == TipoUsuario.ALUNO) {
+            return projetoRepository.findRelacionadosAoUsuario(usuarioLogado.getId(), pageable);
+        }
         return projetoRepository.findByOrientadorUsuarioIdOrAlunoCriadorUsuarioId(
                 usuarioLogado.getId(),
                 usuarioLogado.getId(),

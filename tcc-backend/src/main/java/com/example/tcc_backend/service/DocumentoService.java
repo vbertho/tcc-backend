@@ -138,16 +138,17 @@ public class DocumentoService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nao autenticado");
         }
 
-        if (!usuarioLogado.getId().equals(usuarioId) && usuarioLogado.getTipo() != TipoUsuario.ADMIN) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para listar documentos de outro usuario");
-        }
         // Removemos a verificação do authHelper que bloqueava o Admin
         // Agora ele simplesmente vai no banco e devolve os arquivos do usuário
+        if (!usuarioLogado.getId().equals(usuarioId) && usuarioLogado.getTipo() != TipoUsuario.ADMIN) {
+            return documentoRepository.findByUsuarioIdAndTipo(usuarioId, TipoDocumento.CURRICULO);
+        }
+
         return documentoRepository.findByUsuarioId(usuarioId);
     }
 
     public void remover(Integer id) {
-        Documento documento = buscarDocumentoDoUsuario(id);
+        Documento documento = buscarDocumentoParaEdicao(id);
 
         if (!isRemoteUrl(documento.getCaminho())) {
             apagarArquivo(documento.getCaminho());
@@ -157,6 +158,23 @@ public class DocumentoService {
 
     public Documento buscarDocumentoDoUsuario(Integer id) {
         Usuario usuarioLogado = authHelper.getCurrentUser();
+        if (usuarioLogado == null || usuarioLogado.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nao autenticado");
+        }
+        Documento documento = documentoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento nao encontrado"));
+        boolean isDono = documento.getUsuario() != null && documento.getUsuario().getId().equals(usuarioLogado.getId());
+        if (!isDono && usuarioLogado.getTipo() != TipoUsuario.ADMIN && documento.getTipo() != TipoDocumento.CURRICULO) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para acessar este documento");
+        }
+        return documento;
+    }
+
+    private Documento buscarDocumentoParaEdicao(Integer id) {
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        if (usuarioLogado == null || usuarioLogado.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nao autenticado");
+        }
         Documento documento = documentoRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento nao encontrado"));
 

@@ -34,4 +34,28 @@ public interface ProjetoRepository extends JpaRepository<Projeto, Integer>, JpaS
 """)
     List<Projeto> buscarPorUsuario(@Param("usuarioId") Integer usuarioId);
 
+    @Query("""
+    SELECT DISTINCT p FROM Projeto p
+    LEFT JOIN Inscricao i ON i.projeto = p
+    WHERE p.orientador.usuario.id = :usuarioId
+       OR p.alunoCriador.usuario.id = :usuarioId
+       OR i.aluno.usuario.id = :usuarioId
+""")
+    List<Projeto> findRelacionadosAoUsuario(@Param("usuarioId") Integer usuarioId);
+
+    @Query(value = """
+    SELECT DISTINCT p FROM Projeto p
+    LEFT JOIN Inscricao i ON i.projeto = p
+    WHERE p.orientador.usuario.id = :usuarioId
+       OR p.alunoCriador.usuario.id = :usuarioId
+       OR i.aluno.usuario.id = :usuarioId
+""", countQuery = """
+    SELECT COUNT(DISTINCT p) FROM Projeto p
+    LEFT JOIN Inscricao i ON i.projeto = p
+    WHERE p.orientador.usuario.id = :usuarioId
+       OR p.alunoCriador.usuario.id = :usuarioId
+       OR i.aluno.usuario.id = :usuarioId
+""")
+    Page<Projeto> findRelacionadosAoUsuario(@Param("usuarioId") Integer usuarioId, Pageable pageable);
+
 }

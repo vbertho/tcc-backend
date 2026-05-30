@@ -35,7 +35,9 @@ public class DashboardService {
                 .nomeUsuario(usuario.getNome())
                 .tipoUsuario(usuario.getTipo().name())
                 .totalProjetos(projetoRepository.count())
-                .meusProjetos(projetoRepository.findByOrientadorUsuarioIdOrAlunoCriadorUsuarioId(usuario.getId(), usuario.getId()).size())
+                .meusProjetos(usuario.getTipo() == TipoUsuario.ALUNO
+                        ? projetoRepository.findRelacionadosAoUsuario(usuario.getId()).size()
+                        : projetoRepository.findByOrientadorUsuarioIdOrAlunoCriadorUsuarioId(usuario.getId(), usuario.getId()).size())
                 .minhasInscricoes(minhasInscricoes)
                 .inscricoesPendentes(inscricaoRepository.countByProjetoOrientadorUsuarioIdAndStatus(usuario.getId(), com.example.tcc_backend.model.StatusInscricao.PENDENTE))
                 .notificacoesNaoLidas(notificacaoRepository.countByUsuarioIdAndLidaFalse(usuario.getId()))

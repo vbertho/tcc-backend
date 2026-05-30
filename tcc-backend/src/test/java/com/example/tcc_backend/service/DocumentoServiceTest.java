@@ -167,13 +167,13 @@ class DocumentoServiceTest {
     }
 
     @Test
-    void listarPorUsuarioDeveNegarAcessoDeOutroUsuario() {
+    void listarPorUsuarioDevePermitirUsuarioAutenticadoAcessarCurriculoDeAluno() {
         when(authHelper.getCurrentUser()).thenReturn(TestDataFactory.usuarioAluno(1));
+        when(documentoRepository.findByUsuarioIdAndTipo(2, TipoDocumento.CURRICULO)).thenReturn(java.util.List.of());
 
-        assertThatThrownBy(() -> documentoService.listarPorUsuario(2))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
-                .isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(documentoService.listarPorUsuario(2)).isEmpty();
+
+        verify(documentoRepository).findByUsuarioIdAndTipo(2, TipoDocumento.CURRICULO);
     }
 
     @Test
