@@ -47,6 +47,7 @@ public class SecurityConfig {
                                 "/api/health",
                                 "/api/auth/login",
                                 "/api/auth/register",
+                                "/favicon.ico",
                                 "/error"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cursos").permitAll()

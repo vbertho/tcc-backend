@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.Collection;
 
 @Data
 @Builder
@@ -17,10 +18,11 @@ public class ProjetoRequest {
     private String titulo;
 
     private String descricao;
-    private String requisitos;
+
+    private Object requisitos;
 
     @JsonAlias({"competencias", "technologies", "tecnologia", "technology"})
-    private String tecnologias;
+    private Object tecnologias;
 
     @NotNull(message = "Vagas é obrigatório")
     private Integer vagas;
@@ -33,4 +35,30 @@ public class ProjetoRequest {
     private Integer areaId;
 
     private Integer orientadorId;
+
+    public String getRequisitos() {
+        return normalizeTextList(requisitos);
+    }
+
+    public String getTecnologias() {
+        return normalizeTextList(tecnologias);
+    }
+
+    private String normalizeTextList(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof Collection<?> items) {
+            String normalized = items.stream()
+                    .map(item -> item == null ? "" : String.valueOf(item).trim())
+                    .filter(item -> !item.isEmpty())
+                    .reduce((left, right) -> left + ", " + right)
+                    .orElse("");
+            return normalized.isEmpty() ? null : normalized;
+        }
+
+        String normalized = String.valueOf(value).trim();
+        return normalized.isEmpty() ? null : normalized;
+    }
 }

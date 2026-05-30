@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.not;
 
 @WebMvcTest(controllers = HealthController.class)
 @Import({SecurityConfig.class, JacksonConfig.class, JwtAuthFilter.class})
@@ -39,6 +40,12 @@ class HealthControllerIntegrationTest {
         mockMvc.perform(get("/api/health"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(""));
+    }
+
+    @Test
+    void faviconDeveSerPublico() throws Exception {
+        mockMvc.perform(get("/favicon.ico"))
+                .andExpect(status().is(not(401)));
     }
 
     @Test
