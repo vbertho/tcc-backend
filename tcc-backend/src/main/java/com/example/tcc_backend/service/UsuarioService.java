@@ -55,6 +55,11 @@ public class UsuarioService {
         return usuarioRepository.findAll(pageable);
     }
 
+    public List<Usuario> findOrientadoresAtivos() {
+        authHelper.getCurrentUser();
+        return usuarioRepository.findByTipoAndAtivoTrueOrderByNomeAsc(TipoUsuario.ORIENTADOR);
+    }
+
     public Usuario findById(Integer id) {
         validarAcessoAoUsuario(id, true);
         return usuarioRepository.findById(id)

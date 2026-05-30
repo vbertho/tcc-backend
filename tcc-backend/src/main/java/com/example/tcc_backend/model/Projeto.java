@@ -71,6 +71,8 @@ public class Projeto {
     @PrePersist
     public void prePersist() {
         this.dataCriacao = LocalDateTime.now();
-        this.status = StatusProjeto.ABERTO;
+        if (this.status == null) {
+            this.status = StatusProjeto.ABERTO;
+        }
     }
 }

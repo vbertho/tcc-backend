@@ -26,6 +26,7 @@ public class AdminContentService {
     private final InscricaoRepository inscricaoRepository;
     private final DocumentoRepository documentoRepository;
     private final AreaPesquisaRepository areaPesquisaRepository;
+    private final OrientadorRepository orientadorRepository;
     private final DocumentoService documentoService;
     private final AdminAccessService accessService;
     private final AdminAuditService auditService;
@@ -61,6 +62,7 @@ public class AdminContentService {
         accessService.requireAdmin();
         validateDates(dto);
         AreaPesquisa area = getArea(dto.getAreaId());
+        Orientador orientador = getOrientador(dto.getOrientadorId());
         Projeto projeto = projetoRepository.save(Projeto.builder()
                 .titulo(dto.getTitulo().trim())
                 .descricao(text(dto.getDescricao()))
@@ -71,6 +73,7 @@ public class AdminContentService {
                 .dataFim(dto.getDataFim())
                 .dataLimiteInscricao(dto.getDataLimiteInscricao())
                 .area(area)
+                .orientador(orientador)
                 .build());
         auditService.record("CRIAR", "PROJETO", projeto.getId(), projeto.getTitulo());
         return ProjetoResponse.fromEntity(projeto);
@@ -90,6 +93,11 @@ public class AdminContentService {
         projeto.setDataFim(dto.getDataFim());
         projeto.setDataLimiteInscricao(dto.getDataLimiteInscricao());
         projeto.setArea(getArea(dto.getAreaId()));
+        if (dto.getOrientadorId() != null) {
+            projeto.setOrientador(getOrientador(dto.getOrientadorId()));
+        } else if (projeto.getOrientador() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Orientador e obrigatorio para projetos");
+        }
         projetoRepository.save(projeto);
         auditService.record("ATUALIZAR", "PROJETO", id, projeto.getTitulo());
         return ProjetoResponse.fromEntity(projeto);
@@ -208,6 +216,14 @@ public class AdminContentService {
     private AreaPesquisa getArea(Integer id) {
         return areaPesquisaRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Area nao encontrada"));
+    }
+
+    private Orientador getOrientador(Integer usuarioId) {
+        if (usuarioId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Orientador e obrigatorio para projetos");
+        }
+        return orientadorRepository.findByUsuarioId(usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orientador nao encontrado"));
     }
 
     private String text(String value) {

@@ -135,6 +135,34 @@ public class ProjetoController {
     }
 
     @Operation(
+            summary = "Aceitar orientacao",
+            description = "Permite que o orientador solicitado aceite um projeto criado por aluno."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Projeto aceito com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Usuario nao e o orientador solicitado"),
+            @ApiResponse(responseCode = "404", description = "Projeto nao encontrado")
+    })
+    @PutMapping("/{id}/aceitar-orientacao")
+    public ResponseEntity<ProjetoResponse> aceitarOrientacao(@PathVariable Integer id) {
+        return ResponseEntity.ok(ProjetoResponse.fromEntity(projetoService.aceitarOrientacao(id)));
+    }
+
+    @Operation(
+            summary = "Rejeitar orientacao",
+            description = "Permite que o orientador solicitado recuse um projeto criado por aluno."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Projeto recusado com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Usuario nao e o orientador solicitado"),
+            @ApiResponse(responseCode = "404", description = "Projeto nao encontrado")
+    })
+    @PutMapping("/{id}/rejeitar-orientacao")
+    public ResponseEntity<ProjetoResponse> rejeitarOrientacao(@PathVariable Integer id) {
+        return ResponseEntity.ok(ProjetoResponse.fromEntity(projetoService.rejeitarOrientacao(id)));
+    }
+
+    @Operation(
             summary = "Deletar projeto",
             description = "Remove um projeto do sistema."
     )

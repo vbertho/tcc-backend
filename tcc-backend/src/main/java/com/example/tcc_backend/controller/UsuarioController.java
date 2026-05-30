@@ -77,6 +77,20 @@ public class UsuarioController {
     }
 
     @Operation(
+            summary = "Listar orientadores ativos",
+            description = "Retorna os orientadores ativos para selecao em projetos criados por alunos."
+    )
+    @ApiResponse(responseCode = "200", description = "Orientadores retornados com sucesso")
+    @GetMapping("/orientadores")
+    public ResponseEntity<List<UsuarioResponse>> findOrientadores() {
+        return ResponseEntity.ok(
+                usuarioService.findOrientadoresAtivos().stream()
+                        .map(UsuarioResponse::fromEntity)
+                        .toList()
+        );
+    }
+
+    @Operation(
             summary = "Obter perfil do usuário autenticado",
             description = "Retorna os dados do usuário atualmente autenticado."
     )

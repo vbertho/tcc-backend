@@ -1,7 +1,9 @@
 package com.example.tcc_backend.model;
 
 public enum StatusProjeto {
+    PENDENTE_ORIENTADOR,
     ABERTO,
     EM_ANDAMENTO,
-    FINALIZADO
+    FINALIZADO,
+    REJEITADO_ORIENTADOR
 }

@@ -187,6 +187,32 @@ class ProjetoControllerIntegrationTest {
     }
 
     @Test
+    void aceitarOrientacaoDeveRetornarProjetoAberto() throws Exception {
+        Projeto projeto = TestDataFactory.projetoComOrientador(20, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
+        projeto.setStatus(StatusProjeto.ABERTO);
+
+        when(projetoService.aceitarOrientacao(20)).thenReturn(projeto);
+
+        mockMvc.perform(put("/api/projetos/20/aceitar-orientacao"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(20))
+                .andExpect(jsonPath("$.status").value("ABERTO"));
+    }
+
+    @Test
+    void rejeitarOrientacaoDeveRetornarProjetoRecusado() throws Exception {
+        Projeto projeto = TestDataFactory.projetoComOrientador(20, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
+        projeto.setStatus(StatusProjeto.REJEITADO_ORIENTADOR);
+
+        when(projetoService.rejeitarOrientacao(20)).thenReturn(projeto);
+
+        mockMvc.perform(put("/api/projetos/20/rejeitar-orientacao"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(20))
+                .andExpect(jsonPath("$.status").value("REJEITADO_ORIENTADOR"));
+    }
+
+    @Test
     void deleteDeveRetornarNoContent() throws Exception {
         doNothing().when(projetoService).delete(20);
 

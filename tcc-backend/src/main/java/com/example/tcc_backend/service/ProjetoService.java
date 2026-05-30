@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedHashSet;
@@ -149,6 +150,7 @@ public class ProjetoService {
         );
     }
 
+    @Transactional
     public Projeto create(ProjetoRequest dto) {
         validarDatas(dto);
         Usuario usuarioLogado = authHelper.getCurrentUser();
@@ -172,10 +174,20 @@ public class ProjetoService {
             Orientador orientador = orientadorRepository.findByUsuarioId(usuarioLogado.getId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orientador nao encontrado"));
             builder.orientador(orientador);
-        } else {
+        } else if (usuarioLogado.getTipo() == TipoUsuario.ALUNO) {
+            if (dto.getOrientadorId() == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Orientador e obrigatorio para projetos criados por alunos");
+            }
+            Orientador orientadorSolicitado = orientadorRepository.findByUsuarioId(dto.getOrientadorId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orientador nao encontrado"));
             alunoCriador = alunoRepository.findByUsuarioId(usuarioLogado.getId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aluno nao encontrado"));
-            builder.alunoCriador(alunoCriador);
+            builder
+                    .orientador(orientadorSolicitado)
+                    .alunoCriador(alunoCriador)
+                    .status(StatusProjeto.PENDENTE_ORIENTADOR);
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas alunos ou orientadores podem criar projetos");
         }
 
         Projeto projeto = projetoRepository.save(builder.build());
@@ -187,9 +199,44 @@ public class ProjetoService {
                     .status(StatusInscricao.APROVADO)
                     .build();
             inscricaoRepository.save(inscricaoCriador);
+            notificacaoService.criarNotificacao(
+                    projeto.getOrientador().getUsuario().getId(),
+                    "Novo projeto aguardando aceite de orientacao",
+                    TipoNotificacao.SOLICITACAO_ORIENTACAO,
+                    "PROJETO",
+                    projeto.getId(),
+                    "/projetos/" + projeto.getId(),
+                    projeto.getTitulo()
+            );
         }
 
         return projeto;
+    }
+
+    @Transactional
+    public Projeto aceitarOrientacao(Integer id) {
+        Projeto projeto = findById(id);
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        validarOrientadorSolicitado(projeto, usuarioLogado);
+        validarProjetoPendente(projeto);
+
+        projeto.setStatus(StatusProjeto.ABERTO);
+        Projeto salvo = projetoRepository.save(projeto);
+        notificarAlunoCriador(salvo, "Seu projeto foi aceito pelo orientador", TipoNotificacao.PROJETO_ACEITO);
+        return salvo;
+    }
+
+    @Transactional
+    public Projeto rejeitarOrientacao(Integer id) {
+        Projeto projeto = findById(id);
+        Usuario usuarioLogado = authHelper.getCurrentUser();
+        validarOrientadorSolicitado(projeto, usuarioLogado);
+        validarProjetoPendente(projeto);
+
+        projeto.setStatus(StatusProjeto.REJEITADO_ORIENTADOR);
+        Projeto salvo = projetoRepository.save(projeto);
+        notificarAlunoCriador(salvo, "Seu projeto foi recusado pelo orientador", TipoNotificacao.PROJETO_REJEITADO);
+        return salvo;
     }
 
     public Projeto update(Integer id, ProjetoRequest dto) {
@@ -331,6 +378,41 @@ public class ProjetoService {
         if (!isOrientadorDoProjeto && !isAlunoCriador) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Sem permissao para gerenciar colaboradores deste projeto");
         }
+    }
+
+    private void validarOrientadorSolicitado(Projeto projeto, Usuario usuarioLogado) {
+        if (usuarioLogado.getTipo() != TipoUsuario.ORIENTADOR) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas orientadores podem aceitar ou recusar projetos");
+        }
+
+        boolean isOrientadorSolicitado = projeto.getOrientador() != null &&
+                projeto.getOrientador().getUsuario().getId().equals(usuarioLogado.getId());
+
+        if (!isOrientadorSolicitado) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Voce nao e o orientador solicitado para este projeto");
+        }
+    }
+
+    private void validarProjetoPendente(Projeto projeto) {
+        if (projeto.getStatus() != StatusProjeto.PENDENTE_ORIENTADOR) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Projeto nao esta aguardando aceite do orientador");
+        }
+    }
+
+    private void notificarAlunoCriador(Projeto projeto, String mensagem, TipoNotificacao tipo) {
+        if (projeto.getAlunoCriador() == null) {
+            return;
+        }
+
+        notificacaoService.criarNotificacao(
+                projeto.getAlunoCriador().getUsuario().getId(),
+                mensagem,
+                tipo,
+                "PROJETO",
+                projeto.getId(),
+                "/projetos/" + projeto.getId(),
+                projeto.getTitulo()
+        );
     }
 
     private void validarDatas(ProjetoRequest dto) {

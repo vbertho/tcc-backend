@@ -54,23 +54,61 @@ class ProjetoServiceTest {
     private ProjetoService projetoService;
 
     @Test
-    void createDeveCriarProjetoEInscricaoQuandoUsuarioForAluno() {
+    void createDeveCriarProjetoPendenteEInscricaoQuandoUsuarioForAluno() {
         Usuario usuario = TestDataFactory.usuarioAluno(1);
+        Usuario orientadorUsuario = TestDataFactory.usuarioOrientador(2);
         Aluno aluno = TestDataFactory.aluno(1, usuario);
+        Orientador orientador = TestDataFactory.orientador(2, orientadorUsuario);
         AreaPesquisa area = AreaPesquisa.builder().id(3).nome("IA").build();
         ProjetoRequest request = requestProjeto();
-        Projeto projetoSalvo = TestDataFactory.projetoComAlunoCriador(10, aluno);
+        request.setOrientadorId(2);
 
         when(authHelper.getCurrentUser()).thenReturn(usuario);
         when(areaPesquisaRepository.findById(3)).thenReturn(Optional.of(area));
+        when(orientadorRepository.findByUsuarioId(2)).thenReturn(Optional.of(orientador));
         when(alunoRepository.findByUsuarioId(1)).thenReturn(Optional.of(aluno));
-        when(projetoRepository.save(any(Projeto.class))).thenReturn(projetoSalvo);
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(invocation -> {
+            Projeto projeto = invocation.getArgument(0);
+            projeto.setId(10);
+            return projeto;
+        });
         when(inscricaoRepository.save(any(Inscricao.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Projeto projeto = projetoService.create(request);
 
         assertThat(projeto.getId()).isEqualTo(10);
+        assertThat(projeto.getStatus()).isEqualTo(StatusProjeto.PENDENTE_ORIENTADOR);
+        assertThat(projeto.getOrientador()).isEqualTo(orientador);
+        assertThat(projeto.getAlunoCriador()).isEqualTo(aluno);
         verify(inscricaoRepository).save(any(Inscricao.class));
+        verify(notificacaoService).criarNotificacao(
+                2,
+                "Novo projeto aguardando aceite de orientacao",
+                TipoNotificacao.SOLICITACAO_ORIENTACAO,
+                "PROJETO",
+                10,
+                "/projetos/10",
+                "Projeto"
+        );
+    }
+
+    @Test
+    void createDeveExigirOrientadorQuandoUsuarioForAluno() {
+        Usuario usuario = TestDataFactory.usuarioAluno(1);
+        AreaPesquisa area = AreaPesquisa.builder().id(3).nome("IA").build();
+
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+        when(areaPesquisaRepository.findById(3)).thenReturn(Optional.of(area));
+
+        assertThatThrownBy(() -> projetoService.create(requestProjeto()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> {
+                    ResponseStatusException response = (ResponseStatusException) ex;
+                    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(response.getReason()).isEqualTo("Orientador e obrigatorio para projetos criados por alunos");
+                });
+
+        verify(projetoRepository, never()).save(any(Projeto.class));
     }
 
     @Test
@@ -90,6 +128,75 @@ class ProjetoServiceTest {
         assertThat(projeto.getAlunoCriador()).isNull();
         assertThat(projeto.getTecnologias()).isEqualTo("React, Spring");
         verify(inscricaoRepository, never()).save(any(Inscricao.class));
+    }
+
+    @Test
+    void aceitarOrientacaoDeveAbrirProjetoENotificarAluno() {
+        Usuario orientadorUsuario = TestDataFactory.usuarioOrientador(2);
+        Usuario alunoUsuario = TestDataFactory.usuarioAluno(1);
+        Projeto projeto = TestDataFactory.projetoComOrientador(10, TestDataFactory.orientador(2, orientadorUsuario));
+        projeto.setAlunoCriador(TestDataFactory.aluno(1, alunoUsuario));
+        projeto.setStatus(StatusProjeto.PENDENTE_ORIENTADOR);
+
+        when(authHelper.getCurrentUser()).thenReturn(orientadorUsuario);
+        when(projetoRepository.findById(10)).thenReturn(Optional.of(projeto));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Projeto aceito = projetoService.aceitarOrientacao(10);
+
+        assertThat(aceito.getStatus()).isEqualTo(StatusProjeto.ABERTO);
+        verify(notificacaoService).criarNotificacao(
+                1,
+                "Seu projeto foi aceito pelo orientador",
+                TipoNotificacao.PROJETO_ACEITO,
+                "PROJETO",
+                10,
+                "/projetos/10",
+                "Projeto 10"
+        );
+    }
+
+    @Test
+    void rejeitarOrientacaoDeveMarcarProjetoComoRecusado() {
+        Usuario orientadorUsuario = TestDataFactory.usuarioOrientador(2);
+        Usuario alunoUsuario = TestDataFactory.usuarioAluno(1);
+        Projeto projeto = TestDataFactory.projetoComOrientador(10, TestDataFactory.orientador(2, orientadorUsuario));
+        projeto.setAlunoCriador(TestDataFactory.aluno(1, alunoUsuario));
+        projeto.setStatus(StatusProjeto.PENDENTE_ORIENTADOR);
+
+        when(authHelper.getCurrentUser()).thenReturn(orientadorUsuario);
+        when(projetoRepository.findById(10)).thenReturn(Optional.of(projeto));
+        when(projetoRepository.save(any(Projeto.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Projeto rejeitado = projetoService.rejeitarOrientacao(10);
+
+        assertThat(rejeitado.getStatus()).isEqualTo(StatusProjeto.REJEITADO_ORIENTADOR);
+        verify(notificacaoService).criarNotificacao(
+                1,
+                "Seu projeto foi recusado pelo orientador",
+                TipoNotificacao.PROJETO_REJEITADO,
+                "PROJETO",
+                10,
+                "/projetos/10",
+                "Projeto 10"
+        );
+    }
+
+    @Test
+    void aceitarOrientacaoDeveNegarOrientadorDiferenteDoSolicitado() {
+        Usuario outroOrientador = TestDataFactory.usuarioOrientador(9);
+        Projeto projeto = TestDataFactory.projetoComOrientador(10, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
+        projeto.setStatus(StatusProjeto.PENDENTE_ORIENTADOR);
+
+        when(authHelper.getCurrentUser()).thenReturn(outroOrientador);
+        when(projetoRepository.findById(10)).thenReturn(Optional.of(projeto));
+
+        assertThatThrownBy(() -> projetoService.aceitarOrientacao(10))
+                .isInstanceOf(ResponseStatusException.class)
+                .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+                .isEqualTo(HttpStatus.FORBIDDEN);
+
+        verify(projetoRepository, never()).save(any(Projeto.class));
     }
 
     @Test

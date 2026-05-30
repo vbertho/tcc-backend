@@ -1,6 +1,9 @@
 package com.example.tcc_backend.model;
 
 public enum TipoNotificacao {
+    SOLICITACAO_ORIENTACAO,
+    PROJETO_ACEITO,
+    PROJETO_REJEITADO,
     INSCRICAO_RECEBIDA,
     INSCRICAO_APROVADA,
     INSCRICAO_REJEITADA,

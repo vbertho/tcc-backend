@@ -90,6 +90,8 @@ public class NotificacaoService {
 
     private String rotaPadrao(TipoNotificacao tipo) {
         return switch (tipo) {
+            case SOLICITACAO_ORIENTACAO -> "/projetos?status=PENDENTE_ORIENTADOR";
+            case PROJETO_ACEITO, PROJETO_REJEITADO -> "/meus-projetos";
             case INSCRICAO_RECEBIDA -> "/inscricoes";
             case INSCRICAO_APROVADA, INSCRICAO_REJEITADA -> "/minhas-inscricoes";
             case MENSAGEM_RECEBIDA -> "/conversas";
