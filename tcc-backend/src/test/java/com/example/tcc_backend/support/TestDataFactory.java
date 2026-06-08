@@ -130,6 +130,35 @@ public final class TestDataFactory {
                 .build();
     }
 
+    public static EtapaProgresso etapaProgresso(Integer id, Projeto projeto, Usuario concluidaPor, Integer ordem, Integer peso, EtapaProgressoStatus status) {
+        return EtapaProgresso.builder()
+                .id(id)
+                .projeto(projeto)
+                .titulo("Etapa " + ordem)
+                .descricao("Descricao da etapa")
+                .peso(peso)
+                .ordem(ordem)
+                .status(status)
+                .concluidaPor(concluidaPor)
+                .concluidaEm(LocalDateTime.now())
+                .criadaEm(LocalDateTime.now())
+                .build();
+    }
+
+    public static Progresso progressoComEtapa(Integer id, Projeto projeto, Usuario autor, EtapaProgresso etapa) {
+        return Progresso.builder()
+                .id(id)
+                .projeto(projeto)
+                .autor(autor)
+                .titulo("Atualizacao " + id)
+                .descricao("Atualizacao")
+                .categoria("progress")
+                .etapa(etapa)
+                .stepContribution(50)
+                .dataRegistro(LocalDateTime.now())
+                .build();
+    }
+
     public static Notificacao notificacao(Integer id, Usuario usuario) {
         return Notificacao.builder()
                 .id(id)

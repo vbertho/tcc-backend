@@ -49,6 +49,8 @@ class ProjetoServiceTest {
     private AuthHelper authHelper;
     @Mock
     private NotificacaoService notificacaoService;
+    @Mock
+    private EtapaProgressoService etapaProgressoService;
 
     @InjectMocks
     private ProjetoService projetoService;

@@ -17,6 +17,10 @@ public class ProgressoResponse {
     private String fase;
     private String descricao;
     private String metadataJson;
+    private String categoria;
+    private Integer etapaId;
+    private String etapaTitulo;
+    private Integer stepContribution;
     private LocalDateTime dataRegistro;
     private Integer autorId;
     private String autorNome;
@@ -30,6 +34,10 @@ public class ProgressoResponse {
                 .fase(progresso.getFase())
                 .descricao(progresso.getDescricao())
                 .metadataJson(progresso.getMetadataJson())
+                .categoria(progresso.getCategoria())
+                .etapaId(progresso.getEtapa() != null ? progresso.getEtapa().getId() : null)
+                .etapaTitulo(progresso.getEtapa() != null ? progresso.getEtapa().getTitulo() : null)
+                .stepContribution(progresso.getStepContribution())
                 .dataRegistro(progresso.getDataRegistro())
                 .autorId(progresso.getAutor() != null ? progresso.getAutor().getId() : null)
                 .autorNome(progresso.getAutor() != null ? progresso.getAutor().getNome() : null)

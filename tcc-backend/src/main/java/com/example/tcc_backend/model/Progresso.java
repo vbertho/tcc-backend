@@ -41,12 +41,22 @@ public class Progresso {
     @Column(name = "fase", length = 100)
     private String fase;
 
-    @NotBlank
-    @Column(name = "descricao", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
 
     @Column(name = "metadata_json", columnDefinition = "TEXT")
     private String metadataJson;
+
+    @Column(name = "categoria", length = 30)
+    private String categoria;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_etapa")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private EtapaProgresso etapa;
+
+    @Column(name = "step_contribution")
+    private Integer stepContribution;
 
     @Column(name = "data_registro")
     private LocalDateTime dataRegistro;

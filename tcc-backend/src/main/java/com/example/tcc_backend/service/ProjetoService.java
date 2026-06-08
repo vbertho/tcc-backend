@@ -34,6 +34,7 @@ public class ProjetoService {
     private final UsuarioRepository usuarioRepository;
     private final AuthHelper authHelper;
     private final NotificacaoService notificacaoService;
+    private final EtapaProgressoService etapaProgressoService;
 
     public List<Projeto> findAll(String status, Integer areaId, String area, String curso, String busca) {
         return projetoRepository.findAll(createSpecification(status, areaId, area, curso, busca));
@@ -194,6 +195,7 @@ public class ProjetoService {
         }
 
         Projeto projeto = projetoRepository.save(builder.build());
+        etapaProgressoService.garantirEtapasPadrao(projeto);
 
         if (alunoCriador != null) {
             Inscricao inscricaoCriador = Inscricao.builder()
