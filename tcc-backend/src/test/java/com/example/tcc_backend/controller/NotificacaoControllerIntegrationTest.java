@@ -46,6 +46,16 @@ class NotificacaoControllerIntegrationTest {
     }
 
     @Test
+    void listarMinhasDeveAceitarRotaMobileEmIngles() throws Exception {
+        Notificacao notificacao = TestDataFactory.notificacao(1, TestDataFactory.usuarioAluno(1));
+        when(notificacaoService.minhasNotificacoes()).thenReturn(List.of(notificacao));
+
+        mockMvc.perform(get("/api/notifications"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1));
+    }
+
+    @Test
     void marcarComoLidaDeveRetornarNotificacao() throws Exception {
         Notificacao notificacao = TestDataFactory.notificacao(2, TestDataFactory.usuarioAluno(1));
         notificacao.setLida(true);
@@ -62,6 +72,14 @@ class NotificacaoControllerIntegrationTest {
         doNothing().when(notificacaoService).marcarTodasComoLidas();
 
         mockMvc.perform(put("/api/notificacoes/ler-todas"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void marcarTodasComoLidasDeveAceitarRotaMobileEmIngles() throws Exception {
+        doNothing().when(notificacaoService).marcarTodasComoLidas();
+
+        mockMvc.perform(put("/api/notifications/read-all"))
                 .andExpect(status().isNoContent());
     }
 }

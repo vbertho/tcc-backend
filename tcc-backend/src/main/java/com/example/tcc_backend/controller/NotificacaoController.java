@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/notificacoes")
+@RequestMapping({"/api/notificacoes", "/api/notifications"})
 @RequiredArgsConstructor
 @Tag(name = "Notificações", description = "Endpoints relacionados às notificações do usuário")
 public class NotificacaoController {
@@ -73,7 +73,7 @@ public class NotificacaoController {
             @ApiResponse(responseCode = "200", description = "Notificação atualizada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Notificação não encontrada")
     })
-    @PutMapping("/{id}/ler")
+    @PutMapping({"/{id}/ler", "/{id}/read"})
     public ResponseEntity<NotificacaoResponse> marcarComoLida(@PathVariable Integer id) {
         return ResponseEntity.ok(
                 NotificacaoResponse.fromEntity(notificacaoService.marcarComoLida(id))
@@ -88,7 +88,7 @@ public class NotificacaoController {
             @ApiResponse(responseCode = "204", description = "Notificações atualizadas com sucesso"),
             @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     })
-    @PutMapping("/ler-todas")
+    @PutMapping({"/ler-todas", "/read-all"})
     public ResponseEntity<Void> marcarTodasComoLidas() {
         notificacaoService.marcarTodasComoLidas();
         return ResponseEntity.noContent().build();

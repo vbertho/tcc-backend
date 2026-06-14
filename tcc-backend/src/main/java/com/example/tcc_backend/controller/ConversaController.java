@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/conversas")
+@RequestMapping({"/api/conversas", "/api/chat/conversations"})
 @RequiredArgsConstructor
 @Tag(name = "Conversas", description = "Endpoints de mensagens e comunicação entre usuários")
 public class ConversaController {
@@ -85,6 +85,16 @@ public class ConversaController {
         );
     }
 
+    @Operation(summary = "Listar todas as conversas do usuario autenticado")
+    @GetMapping
+    public ResponseEntity<List<ConversaResponse>> listarMinhasTodas() {
+        Integer logadoId = authHelper.getCurrentUser().getId();
+        return ResponseEntity.ok(
+                conversaService.listarTodasConversasDoUsuario(logadoId)
+                        .stream().map(c -> ConversaResponse.fromEntity(c, logadoId)).toList()
+        );
+    }
+
     @Operation(summary = "Listar todas as conversas (grupo + privadas)")
     @GetMapping("/{usuarioId}/todas")
     public ResponseEntity<List<ConversaResponse>> listarTodas(@PathVariable Integer usuarioId) {
@@ -116,7 +126,7 @@ public class ConversaController {
     }
 
     @Operation(summary = "Listar mensagens de uma conversa")
-    @GetMapping("/{id}/mensagens")
+    @GetMapping({"/{id}/mensagens", "/{id}/messages"})
     public ResponseEntity<List<MensagemResponse>> listarMensagens(@PathVariable Integer id) {
         return ResponseEntity.ok(
                 conversaService.listarMensagens(id)
@@ -125,7 +135,7 @@ public class ConversaController {
     }
 
     @Operation(summary = "Listar mensagens paginadas")
-    @GetMapping("/{id}/mensagens/pagina")
+    @GetMapping({"/{id}/mensagens/pagina", "/{id}/messages/page"})
     public ResponseEntity<PageResponse<MensagemResponse>> listarMensagensPaginadas(
             @PathVariable Integer id,
             @RequestParam(defaultValue = "0") int page,
@@ -144,7 +154,7 @@ public class ConversaController {
     }
 
     @Operation(summary = "Enviar mensagem")
-    @PostMapping("/{id}/mensagem")
+    @PostMapping({"/{id}/mensagem", "/{id}/messages"})
     public ResponseEntity<MensagemResponse> enviarMensagem(
             @PathVariable Integer id,
             @RequestBody @Valid MensagemRequest dto) {

@@ -28,7 +28,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/projetos")
+@RequestMapping({"/api/projetos", "/api/projects"})
 @RequiredArgsConstructor
 @Tag(name = "Projetos", description = "Endpoints relacionados à gestão de projetos")
 public class ProjetoController {
@@ -49,10 +49,12 @@ public class ProjetoController {
             @RequestParam(required = false) Integer areaId,
             @RequestParam(required = false) String area,
             @RequestParam(required = false) String curso,
+            @RequestParam(required = false) String course,
             @RequestParam(required = false) String busca) {
+        String cursoFiltro = curso != null ? curso : course;
 
         return ResponseEntity.ok(
-                projetoService.findAll(status, areaId, area, curso, busca)
+                projetoService.findAll(status, areaId, area, cursoFiltro, busca)
                         .stream()
                         .map(ProjetoResponse::fromEntity)
                         .toList()
@@ -73,7 +75,9 @@ public class ProjetoController {
             @RequestParam(required = false) Integer areaId,
             @RequestParam(required = false) String area,
             @RequestParam(required = false) String curso,
+            @RequestParam(required = false) String course,
             @RequestParam(required = false) String busca,
+            @RequestParam(required = false) String search,
             @RequestParam(required = false, defaultValue = "false") Boolean meusProjetos,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -81,13 +85,15 @@ public class ProjetoController {
             @RequestParam(defaultValue = "DESC") String direction) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sort));
+        String cursoFiltro = curso != null ? curso : course;
+        String buscaFiltro = busca != null ? busca : search;
 
         if (Boolean.TRUE.equals(meusProjetos)) {
             return ResponseEntity.ok(PageResponse.from(projetoService.findMeusProjetos(pageable).map(ProjetoResponse::fromEntity)));
         }
 
         return ResponseEntity.ok(PageResponse.from(
-                projetoService.findAll(status, areaId, area, curso, busca, pageable)
+                projetoService.findAll(status, areaId, area, cursoFiltro, buscaFiltro, pageable)
                         .map(ProjetoResponse::fromEntity)
         ));
     }

@@ -29,7 +29,7 @@ public class DashboardController {
             @ApiResponse(responseCode = "200", description = "Dados retornados com sucesso"),
             @ApiResponse(responseCode = "401", description = "Usuário não autenticado")
     })
-    @GetMapping
+    @GetMapping({"", "/stats", "/activity"})
     public ResponseEntity<DashboardResponse> resumo() {
         return ResponseEntity.ok(dashboardService.getDashboard());
     }

@@ -89,6 +89,22 @@ class ConversaControllerIntegrationTest {
     }
 
     @Test
+    void listarMinhasTodasDeveAceitarRotaMobileEmIngles() throws Exception {
+        when(authHelper.getCurrentUser()).thenReturn(TestDataFactory.usuarioAluno(1));
+        Conversa conversa = TestDataFactory.conversa(
+                2,
+                TestDataFactory.projetoComAlunoCriador(10, TestDataFactory.aluno(1, TestDataFactory.usuarioAluno(1)))
+        );
+
+        when(conversaService.listarTodasConversasDoUsuario(1)).thenReturn(List.of(conversa));
+
+        mockMvc.perform(get("/api/chat/conversations"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(2))
+                .andExpect(jsonPath("$[0].projetoId").value(10));
+    }
+
+    @Test
     void listarMensagensDeveRetornarLista() throws Exception {
         Conversa conversa = TestDataFactory.conversa(
                 3,
@@ -102,6 +118,21 @@ class ConversaControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(4))
                 .andExpect(jsonPath("$[0].conteudo").value("Mensagem de teste"));
+    }
+
+    @Test
+    void listarMensagensDeveAceitarRotaMobileEmIngles() throws Exception {
+        Conversa conversa = TestDataFactory.conversa(
+                3,
+                TestDataFactory.projetoComAlunoCriador(10, TestDataFactory.aluno(1, TestDataFactory.usuarioAluno(1)))
+        );
+        Mensagem mensagem = TestDataFactory.mensagem(4, conversa, TestDataFactory.usuarioAluno(1));
+
+        when(conversaService.listarMensagens(3)).thenReturn(List.of(mensagem));
+
+        mockMvc.perform(get("/api/chat/conversations/3/messages"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(4));
     }
 
     @Test
@@ -121,6 +152,25 @@ class ConversaControllerIntegrationTest {
         mockMvc.perform(post("/api/conversas/5/mensagem")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(6))
+                .andExpect(jsonPath("$.conteudo").value("Ola"));
+    }
+
+    @Test
+    void enviarMensagemDeveAceitarRotaMobileEmInglesEContent() throws Exception {
+        Conversa conversa = TestDataFactory.conversa(
+                5,
+                TestDataFactory.projetoComAlunoCriador(10, TestDataFactory.aluno(1, TestDataFactory.usuarioAluno(1)))
+        );
+        Mensagem mensagem = TestDataFactory.mensagem(6, conversa, TestDataFactory.usuarioAluno(1));
+        mensagem.setConteudo("Ola");
+
+        when(conversaService.enviarMensagem(5, "Ola")).thenReturn(mensagem);
+
+        mockMvc.perform(post("/api/chat/conversations/5/messages")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"Ola\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(6))
                 .andExpect(jsonPath("$.conteudo").value("Ola"));

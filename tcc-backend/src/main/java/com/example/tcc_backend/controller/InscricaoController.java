@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/inscricoes")
+@RequestMapping({"/api/inscricoes", "/api/subscriptions"})
 @RequiredArgsConstructor
 @Tag(name = "Inscrições", description = "Endpoints relacionados às inscrições em projetos")
 public class InscricaoController {
@@ -45,7 +45,7 @@ public class InscricaoController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista paginada retornada com sucesso")
     })
-    @GetMapping("/pagina")
+    @GetMapping({"/pagina", "/page"})
     public ResponseEntity<PageResponse<InscricaoResponse>> findAllPaginado(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -76,7 +76,7 @@ public class InscricaoController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso")
     })
-    @GetMapping("/projeto/{projetoId}")
+    @GetMapping({"/projeto/{projetoId}", "/project/{projetoId}"})
     public ResponseEntity<List<InscricaoResponse>> findByProjeto(@PathVariable Integer projetoId) {
         return ResponseEntity.ok(
                 inscricaoService.findByProjeto(projetoId).stream()
@@ -88,7 +88,7 @@ public class InscricaoController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista paginada retornada com sucesso")
     })
-    @GetMapping("/projeto/{projetoId}/pagina")
+    @GetMapping({"/projeto/{projetoId}/pagina", "/project/{projetoId}/page"})
     public ResponseEntity<PageResponse<InscricaoResponse>> findByProjetoPaginado(
             @PathVariable Integer projetoId,
             @RequestParam(defaultValue = "0") int page,
@@ -121,7 +121,7 @@ public class InscricaoController {
             @ApiResponse(responseCode = "200", description = "Inscrição aprovada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Inscrição não encontrada")
     })
-    @PutMapping("/{id}/aprovar")
+    @PutMapping({"/{id}/aprovar", "/{id}/approve"})
     public ResponseEntity<InscricaoResponse> aprovar(@PathVariable Integer id,
                                                      @RequestBody(required = false) @Valid InscricaoAvaliacaoRequest dto) {
         return ResponseEntity.ok(
@@ -134,7 +134,7 @@ public class InscricaoController {
             @ApiResponse(responseCode = "200", description = "Inscrição rejeitada com sucesso"),
             @ApiResponse(responseCode = "404", description = "Inscrição não encontrada")
     })
-    @PutMapping("/{id}/rejeitar")
+    @PutMapping({"/{id}/rejeitar", "/{id}/reject"})
     public ResponseEntity<InscricaoResponse> rejeitar(@PathVariable Integer id,
                                                       @RequestBody(required = false) @Valid InscricaoAvaliacaoRequest dto) {
         return ResponseEntity.ok(
@@ -156,7 +156,7 @@ public class InscricaoController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Inscrição cancelada com sucesso")
     })
-    @DeleteMapping("/{id}/cancelar")
+    @DeleteMapping({"/{id}/cancelar", "/{id}/cancel"})
     public ResponseEntity<Void> cancelarMinha(@PathVariable Integer id) {
         inscricaoService.cancelarMinha(id);
         return ResponseEntity.noContent().build();

@@ -56,6 +56,16 @@ class ProjetoControllerIntegrationTest {
     }
 
     @Test
+    void findAllDeveAceitarRotaMobileEmIngles() throws Exception {
+        Projeto projeto = TestDataFactory.projetoComOrientador(10, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
+        when(projetoService.findAll(eq(null), eq(null), eq(null), eq("ADS"), eq(null))).thenReturn(List.of(projeto));
+
+        mockMvc.perform(get("/api/projects").param("course", "ADS"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(10));
+    }
+
+    @Test
     void findAllComStatusDeveFiltrar() throws Exception {
         Projeto projeto = TestDataFactory.projetoComOrientador(11, TestDataFactory.orientador(2, TestDataFactory.usuarioOrientador(2)));
         projeto.setStatus(StatusProjeto.EM_ANDAMENTO);
