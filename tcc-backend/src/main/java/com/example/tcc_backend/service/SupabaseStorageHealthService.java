@@ -1,5 +1,6 @@
 package com.example.tcc_backend.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ public class SupabaseStorageHealthService {
     private final String supabaseServiceRoleKey;
     private final String supabaseStorageBucket;
 
+    @Autowired
     public SupabaseStorageHealthService(@Value("${SUPABASE_URL:}") String supabaseUrl,
                                         @Value("${SUPABASE_ANON_KEY:}") String supabaseAnonKey,
                                         @Value("${SUPABASE_SERVICE_ROLE_KEY:}") String supabaseServiceRoleKey,
