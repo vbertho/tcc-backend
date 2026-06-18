@@ -37,7 +37,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
 
         if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())
                 || StompCommand.SEND.equals(accessor.getCommand())) {
-            restoreOrAuthenticate(accessor);
+            restoreAuthentication(accessor);
         }
 
         if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
@@ -78,7 +78,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
         }
     }
 
-    private void restoreOrAuthenticate(StompHeaderAccessor accessor) {
+    private void restoreAuthentication(StompHeaderAccessor accessor) {
         if (accessor.getUser() != null) return;
 
         String sessionId = accessor.getSessionId();
@@ -88,10 +88,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
 
         if (authentication != null) {
             accessor.setUser(authentication);
-            return;
         }
-
-        authenticate(accessor);
     }
 
     private String bearerToken(StompHeaderAccessor accessor) {
