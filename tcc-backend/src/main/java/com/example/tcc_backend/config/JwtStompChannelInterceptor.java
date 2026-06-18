@@ -37,7 +37,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
 
         if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())
                 || StompCommand.SEND.equals(accessor.getCommand())) {
-            restoreAuthentication(accessor);
+            restoreOrAuthenticate(accessor);
         }
 
         if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
@@ -78,7 +78,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
         }
     }
 
-    private void restoreAuthentication(StompHeaderAccessor accessor) {
+    private void restoreOrAuthenticate(StompHeaderAccessor accessor) {
         if (accessor.getUser() != null) return;
 
         String sessionId = accessor.getSessionId();
@@ -86,11 +86,12 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
                 ? authenticationsBySession.get(sessionId)
                 : null;
 
-        if (authentication == null) {
-            throw new IllegalArgumentException("Nao autenticado");
+        if (authentication != null) {
+            accessor.setUser(authentication);
+            return;
         }
 
-        accessor.setUser(authentication);
+        authenticate(accessor);
     }
 
     private String bearerToken(StompHeaderAccessor accessor) {
