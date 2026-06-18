@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +32,7 @@ class SupabaseStorageHealthServiceTest {
         HttpClient httpClient = mock(HttpClient.class);
         HttpResponse<String> response = mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(200);
-        when(httpClient.send(any(), any())).thenReturn(response);
+        when(httpClient.send(any(HttpRequest.class), anyStringBodyHandler())).thenReturn(response);
         SupabaseStorageHealthService service = new SupabaseStorageHealthService(
                 httpClient,
                 "https://example.supabase.co/",
@@ -52,7 +53,7 @@ class SupabaseStorageHealthServiceTest {
         HttpClient httpClient = mock(HttpClient.class);
         HttpResponse<String> response = mock(HttpResponse.class);
         when(response.statusCode()).thenReturn(401);
-        when(httpClient.send(any(), any())).thenReturn(response);
+        when(httpClient.send(any(HttpRequest.class), anyStringBodyHandler())).thenReturn(response);
         SupabaseStorageHealthService service = new SupabaseStorageHealthService(
                 httpClient,
                 "https://example.supabase.co",
@@ -88,7 +89,7 @@ class SupabaseStorageHealthServiceTest {
     @Test
     void deveRetornarIndisponivelQuandoChamadaFalhar() throws Exception {
         HttpClient httpClient = mock(HttpClient.class);
-        when(httpClient.send(any(), any())).thenThrow(new IOException("timeout"));
+        when(httpClient.send(any(HttpRequest.class), anyStringBodyHandler())).thenThrow(new IOException("timeout"));
         SupabaseStorageHealthService service = new SupabaseStorageHealthService(
                 httpClient,
                 "https://example.supabase.co",
@@ -101,5 +102,10 @@ class SupabaseStorageHealthServiceTest {
 
         assertThat(health.ok()).isFalse();
         assertThat(health.message()).isEqualTo("Falha ao acessar o Supabase Storage");
+    }
+
+    @SuppressWarnings("unchecked")
+    private static HttpResponse.BodyHandler<String> anyStringBodyHandler() {
+        return (HttpResponse.BodyHandler<String>) any(HttpResponse.BodyHandler.class);
     }
 }
