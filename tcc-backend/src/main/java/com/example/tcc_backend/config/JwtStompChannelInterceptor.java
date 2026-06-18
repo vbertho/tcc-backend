@@ -15,6 +15,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
     private final TokenRevocationService tokenRevocationService;
+    private final Map<String, UsernamePasswordAuthenticationToken> authenticationsBySession = new ConcurrentHashMap<>();
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -32,10 +35,16 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
             authenticate(accessor);
         }
 
-        if ((StompCommand.SUBSCRIBE.equals(accessor.getCommand())
-                || StompCommand.SEND.equals(accessor.getCommand()))
-                && accessor.getUser() == null) {
-            throw new IllegalArgumentException("Nao autenticado");
+        if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())
+                || StompCommand.SEND.equals(accessor.getCommand())) {
+            restoreAuthentication(accessor);
+        }
+
+        if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {
+            String sessionId = accessor.getSessionId();
+            if (sessionId != null) {
+                authenticationsBySession.remove(sessionId);
+            }
         }
 
         return message;
@@ -60,9 +69,28 @@ public class JwtStompChannelInterceptor implements ChannelInterceptor {
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
             accessor.setUser(authentication);
+            String sessionId = accessor.getSessionId();
+            if (sessionId != null) {
+                authenticationsBySession.put(sessionId, authentication);
+            }
         } catch (JwtException | IllegalArgumentException ex) {
             throw new IllegalArgumentException("Token invalido", ex);
         }
+    }
+
+    private void restoreAuthentication(StompHeaderAccessor accessor) {
+        if (accessor.getUser() != null) return;
+
+        String sessionId = accessor.getSessionId();
+        UsernamePasswordAuthenticationToken authentication = sessionId != null
+                ? authenticationsBySession.get(sessionId)
+                : null;
+
+        if (authentication == null) {
+            throw new IllegalArgumentException("Nao autenticado");
+        }
+
+        accessor.setUser(authentication);
     }
 
     private String bearerToken(StompHeaderAccessor accessor) {
