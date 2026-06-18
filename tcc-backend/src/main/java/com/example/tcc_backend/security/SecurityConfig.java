@@ -48,6 +48,8 @@ public class SecurityConfig {
                                 "/api/health/**",
                                 "/api/auth/login",
                                 "/api/auth/register",
+                                "/ws",
+                                "/ws/**",
                                 "/favicon.ico",
                                 "/error"
                         ).permitAll()

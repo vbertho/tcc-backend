@@ -26,6 +26,7 @@ public class ConversaService {
     private final UsuarioRepository usuarioRepository;
     private final AuthHelper authHelper;
     private final NotificacaoService notificacaoService;
+    private final ChatRealtimeService chatRealtimeService;
 
     public Conversa criar(Integer projetoId) {
         return abrirOuCriarPorProjeto(projetoId);
@@ -206,6 +207,7 @@ public class ConversaService {
             }
         }
 
+        chatRealtimeService.publicarMensagemCriada(salva);
         return salva;
     }
 
@@ -251,7 +253,9 @@ public class ConversaService {
         mensagem.setEditada(true);
         mensagem.setDataEdicao(OffsetDateTime.now());
 
-        return MensagemResponse.fromEntity(mensagemRepository.save(mensagem));
+        MensagemResponse response = MensagemResponse.fromEntity(mensagemRepository.save(mensagem));
+        chatRealtimeService.publicarMensagemEditada(response);
+        return response;
     }
 
     public void excluirMensagem(Integer mensagemId) {
@@ -264,6 +268,8 @@ public class ConversaService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Voce nao pode excluir a mensagem de outro usuario");
         }
 
+        Integer conversaId = mensagem.getConversa() != null ? mensagem.getConversa().getId() : null;
         mensagemRepository.delete(mensagem);
+        chatRealtimeService.publicarMensagemExcluida(conversaId, mensagemId);
     }
 }
