@@ -130,7 +130,7 @@ class ConversaServiceTest {
                 TipoNotificacao.MENSAGEM_RECEBIDA,
                 "CONVERSA",
                 5,
-                "/conversas/5",
+                "/conversas/5?mensagemId=8",
                 "Projeto 10"
         );
         verify(notificacaoService).criarNotificacao(
@@ -139,7 +139,7 @@ class ConversaServiceTest {
                 TipoNotificacao.MENSAGEM_RECEBIDA,
                 "CONVERSA",
                 5,
-                "/conversas/5",
+                "/conversas/5?mensagemId=8",
                 "Projeto 10"
         );
     }

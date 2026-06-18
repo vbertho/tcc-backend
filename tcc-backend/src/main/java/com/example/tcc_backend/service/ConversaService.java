@@ -158,6 +158,7 @@ public class ConversaService {
                 .conteudo(conteudo)
                 .build();
         Mensagem salva = mensagemRepository.save(mensagem);
+        String rotaMensagem = "/conversas/" + conversa.getId() + "?mensagemId=" + salva.getId();
 
         if (conversa.getTipo() == TipoConversa.PRIVADA) {
             // Notifica o outro participante
@@ -169,7 +170,7 @@ public class ConversaService {
                             TipoNotificacao.MENSAGEM_RECEBIDA,
                             "CONVERSA",
                             conversa.getId(),
-                            "/conversas/" + conversa.getId(),
+                            rotaMensagem,
                             usuarioLogado.getNome()
                     ));
         } else {
@@ -184,7 +185,7 @@ public class ConversaService {
                             TipoNotificacao.MENSAGEM_RECEBIDA,
                             "CONVERSA",
                             conversa.getId(),
-                            "/conversas/" + conversa.getId(),
+                            rotaMensagem,
                             projeto.getTitulo()
                     );
                 }
@@ -198,7 +199,7 @@ public class ConversaService {
                             TipoNotificacao.MENSAGEM_RECEBIDA,
                             "CONVERSA",
                             conversa.getId(),
-                            "/conversas/" + conversa.getId(),
+                            rotaMensagem,
                             projeto.getTitulo()
                     );
                 }
