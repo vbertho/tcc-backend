@@ -26,6 +26,9 @@ public class UsuarioRequest {
     @Size(max = 2000, message = "Bio deve ter no maximo 2000 caracteres")
     private String bio;
 
+    @Size(max = 500, message = "Foto de perfil deve ter no maximo 500 caracteres")
+    private String fotoPerfilUrl;
+
     private Integer cursoId;
     private Integer semestre;
 

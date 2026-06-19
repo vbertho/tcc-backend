@@ -55,6 +55,9 @@ public class Usuario implements UserDetails {
     @Column(name = "bio", columnDefinition = "TEXT")
     private String bio;
 
+    @Column(name = "foto_perfil_url", length = 500)
+    private String fotoPerfilUrl;
+
     @Column(name = "tema", length = 30)
     private String tema;
 

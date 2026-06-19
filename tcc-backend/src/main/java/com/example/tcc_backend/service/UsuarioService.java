@@ -72,6 +72,13 @@ public class UsuarioService {
         return montarPerfil(usuario);
     }
 
+    public UsuarioProfileResponse findProfileById(Integer id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario nao encontrado"));
+        validarAcessoAoUsuario(usuario, true);
+        return montarPerfil(usuario);
+    }
+
     @Transactional
     public Usuario update(Integer id, UsuarioRequest dto) {
         Usuario usuarioLogado = authHelper.getCurrentUser();
@@ -85,6 +92,9 @@ public class UsuarioService {
         usuario.setEmail(dto.getEmail().trim().toLowerCase());
         usuario.setInstituicao(normalizarTexto(dto.getInstituicao()));
         usuario.setBio(normalizarTexto(dto.getBio()));
+        if (dto.getFotoPerfilUrl() != null) {
+            usuario.setFotoPerfilUrl(normalizarTexto(dto.getFotoPerfilUrl()));
+        }
         usuarioRepository.save(usuario);
 
         if (usuario.getTipo() == TipoUsuario.ALUNO) {

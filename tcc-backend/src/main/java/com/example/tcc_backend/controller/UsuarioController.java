@@ -131,6 +131,19 @@ public class UsuarioController {
     }
 
     @Operation(
+            summary = "Buscar perfil completo por ID",
+            description = "Retorna o perfil completo de um usuário específico."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Perfil retornado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    @GetMapping("/{id}/perfil")
+    public ResponseEntity<UsuarioProfileResponse> findProfileById(@PathVariable Integer id) {
+        return ResponseEntity.ok(usuarioService.findProfileById(id));
+    }
+
+    @Operation(
             summary = "Atualizar usuário",
             description = "Atualiza os dados de um usuário existente com base no ID."
     )

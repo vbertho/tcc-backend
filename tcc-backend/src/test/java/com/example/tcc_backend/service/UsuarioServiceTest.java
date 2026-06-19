@@ -116,6 +116,32 @@ class UsuarioServiceTest {
     }
 
     @Test
+    void updateDevePreservarFotoQuandoNaoEnviada() {
+        Usuario usuario = TestDataFactory.usuarioAluno(1);
+        usuario.setFotoPerfilUrl("https://cdn.exemplo/foto-antiga.png");
+        var aluno = TestDataFactory.aluno(1, usuario);
+        Curso curso = Curso.builder().id(5).nome("ADS").build();
+        UsuarioRequest request = UsuarioRequest.builder()
+                .nome("Novo Nome")
+                .email("novo@teste.com")
+                .instituicao("FATEC")
+                .bio("Bio")
+                .semestre(4)
+                .cursoId(5)
+                .build();
+
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario));
+        when(alunoRepository.findByUsuarioId(1)).thenReturn(Optional.of(aluno));
+        when(cursoRepository.findById(5)).thenReturn(Optional.of(curso));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Usuario atualizado = usuarioService.update(1, request);
+
+        assertThat(atualizado.getFotoPerfilUrl()).isEqualTo("https://cdn.exemplo/foto-antiga.png");
+    }
+
+    @Test
     void meDeveRetornarPerfilCompletoDoAluno() {
         Usuario usuario = TestDataFactory.usuarioAluno(1);
         Curso curso = Curso.builder().id(5).nome("ADS").build();
@@ -135,6 +161,26 @@ class UsuarioServiceTest {
         assertThat(profile.getId()).isEqualTo(1);
         assertThat(profile.getCursoNome()).isEqualTo("ADS");
         assertThat(profile.getTema()).isEqualTo("escuro");
+    }
+
+    @Test
+    void findProfileByIdDeveRetornarPerfilCompletoDoUsuario() {
+        Usuario usuario = TestDataFactory.usuarioAluno(1);
+        Curso curso = Curso.builder().id(5).nome("ADS").build();
+        var aluno = TestDataFactory.aluno(1, usuario);
+        aluno.setCurso(curso);
+        aluno.setSemestre(4);
+        aluno.setInteresses("IA");
+
+        when(authHelper.getCurrentUser()).thenReturn(usuario);
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuario));
+        when(alunoRepository.findByUsuarioId(1)).thenReturn(Optional.of(aluno));
+        when(orientadorRepository.findByUsuarioId(1)).thenReturn(Optional.empty());
+
+        UsuarioProfileResponse profile = usuarioService.findProfileById(1);
+
+        assertThat(profile.getId()).isEqualTo(1);
+        assertThat(profile.getCursoNome()).isEqualTo("ADS");
     }
 
     @Test
