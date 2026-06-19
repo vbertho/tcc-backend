@@ -1,29 +1,101 @@
-# TCC Backend
+<div align="center">
 
-Backend Spring Boot preparado para rodar localmente, em Docker e no Render.
+# CollabResearch Backend
 
-## Variaveis de ambiente
+**API principal do sistema de gerenciamento de TCC.**
 
-Crie um arquivo `.env` na raiz do backend usando `.env.example` como base.
+<p>
+  <img alt="Java" src="https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white">
+  <img alt="Spring Boot" src="https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white">
+  <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white">
+</p>
 
-Obrigatorias:
+</div>
 
-- `DB_URL`: URL JDBC do PostgreSQL. Para Supabase em producao, use `jdbc:postgresql://HOST:PORT/postgres?sslmode=require`.
-- `DB_USER`: usuario do banco.
-- `DB_PASSWORD`: senha do banco.
-- `JWT_SECRET`: chave forte para assinar JWT. Use base64 com pelo menos 32 bytes.
+---
 
-Opcionais:
+## Visao geral
 
-- `PORT`: porta usada pela aplicacao. No Render ela e definida automaticamente.
-- `DB_SSL_MODE`: use `require` no Supabase/Render e `disable` em PostgreSQL local sem SSL.
-- `CORS_ALLOWED_ORIGIN_PATTERNS`: origens permitidas, separadas por virgula. Em producao no Render, mantenha somente as aplicacoes web publicas permitidas; o desktop em desenvolvimento usa uma proxy local.
-- `JPA_DDL_AUTO`: padrao `update`.
-- `JPA_SHOW_SQL`: padrao `false`.
-- `JWT_EXPIRATION_MS`: padrao `2592000000`.
-- `ADMIN_BOOTSTRAP_NAME`, `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_PASSWORD`: criam a primeira conta administrativa somente se o email ainda nao existir. A senha deve ter ao menos 8 caracteres.
+Backend Spring Boot responsavel por autenticacao, usuarios, projetos, inscricoes, documentos, notificacoes, chat e area administrativa.
 
-## Rodar local
+## Objetivo
+
+Expor a regra de negocio da plataforma e persistir os dados do sistema para web, mobile e painel administrativo.
+
+## Funcionalidades principais
+
+- Autenticacao e autorizacao por perfil.
+- Cadastro e edicao de usuarios.
+- Gestao de projetos e inscricoes.
+- Upload, consulta e remocao de documentos.
+- Notificacoes e conversas.
+- Dashboard e rotas administrativas.
+
+## Tecnologias utilizadas
+
+- Java 21
+- Spring Boot 4
+- Spring Web, Security, Validation e Data JPA
+- PostgreSQL
+- H2 para testes
+- JWT
+- Lombok
+- Springdoc OpenAPI
+
+## Estrutura do projeto
+
+```text
+tcc-backend/
+|-- src/main/java/com/example/tcc_backend/
+|   |-- controller/   # Endpoints HTTP
+|   |-- service/      # Regras de negocio
+|   |-- model/        # Entidades JPA
+|   |-- repository/   # Acesso a dados
+|   |-- dto/          # Requisicoes e respostas
+|   |-- config/       # Configuracoes
+|   `-- security/     # Autenticacao e autorizacao
+|-- src/main/resources/
+|-- src/test/         # Testes unitarios e de servico
+|-- docs/             # Migrations e documentos auxiliares
+|-- Dockerfile
+`-- pom.xml
+```
+
+## Pre-requisitos
+
+- JDK 21
+- Maven Wrapper ou Maven instalado
+- PostgreSQL acessivel localmente ou em cloud
+
+## Configuracao de ambiente
+
+Copie e ajuste o arquivo `.env.example` na raiz do backend.
+
+Variaveis principais:
+
+```env
+DB_URL=jdbc:postgresql://localhost:5432/tcc
+DB_USER=postgres
+DB_PASSWORD=postgres
+JWT_SECRET=base64_com_pelo_menos_32_bytes
+SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_ANON_KEY=sua_chave
+SUPABASE_STORAGE_BUCKET=documents
+```
+
+## Instalacao
+
+```bash
+./mvnw clean install
+```
+
+No Windows PowerShell:
+
+```powershell
+.\mvnw.cmd clean install
+```
+
+## Como executar localmente
 
 ```bash
 ./mvnw spring-boot:run
@@ -35,64 +107,82 @@ No Windows PowerShell:
 .\mvnw.cmd spring-boot:run
 ```
 
-## Build Maven
+## Como gerar build
 
 ```bash
 ./mvnw clean package -DskipTests
 ```
 
-O jar gerado fica em `target/tcc-backend-0.0.1-SNAPSHOT.jar`.
+## Principais rotas
 
-## Docker
+### Autenticacao
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `PUT /api/auth/senha`
+- `POST /api/auth/logout`
 
-```bash
-docker build -t tcc-backend .
-docker run --env-file .env -p 8080:8080 tcc-backend
+### Usuarios
+- `GET /api/usuarios/me`
+- `PUT /api/usuarios/me/preferencias`
+- `GET /api/usuarios/{id}`
+- `GET /api/usuarios/{id}/perfil`
+- `PUT /api/usuarios/{id}`
+- `GET /api/usuarios/{id}/projetos`
+- `GET /api/usuarios/{id}/inscricoes`
+- `GET /api/usuarios/{id}/documentos`
+
+### Projetos e inscricoes
+- `GET /api/projetos`
+- `POST /api/projetos`
+- `PUT /api/projetos/{id}`
+- `DELETE /api/projetos/{id}`
+- `POST /api/projetos/{id}/recrutar`
+- `GET /api/inscricoes`
+- `POST /api/inscricoes`
+- `PUT /api/inscricoes/{id}/aprovar`
+- `PUT /api/inscricoes/{id}/rejeitar`
+
+### Chat e notificacoes
+- `GET /api/conversas`
+- `POST /api/conversas`
+- `GET /api/conversas/{id}/mensagens`
+- `POST /api/conversas/{id}/mensagem`
+- `GET /api/notificacoes`
+- `PUT /api/notificacoes/{id}/ler`
+- `PUT /api/notificacoes/ler-todas`
+
+### Documentos e dashboard
+- `POST /api/documentos/upload`
+- `GET /api/documentos/{id}/download`
+- `GET /api/documentos/{id}/preview`
+- `GET /api/documentos/usuario/{usuarioId}`
+- `GET /api/dashboard`
+
+### Admin
+- `GET /api/admin/dashboard`
+- `GET /api/admin/usuarios`
+- `GET /api/admin/projetos`
+- `GET /api/admin/inscricoes`
+- `GET /api/admin/documentos`
+- `GET /api/admin/areas`
+
+## Arquitetura resumida
+
+```mermaid
+flowchart LR
+    A["Frontend Web"] --> D["API Spring Boot"]
+    B["Mobile Flutter"] --> D
+    C["Desktop Admin"] --> D
+    D --> E["PostgreSQL"]
+    D --> F["Supabase Storage"]
 ```
 
-O `Dockerfile` usa Java 21, compila o projeto com Maven e executa o jar gerado.
+O backend concentra autenticacao, validacao, regras de negocio e persistencia. Web, mobile e desktop consomem os mesmos contratos HTTP.
 
-## Deploy no Render
+## Equipe do projeto
 
-1. No Render, crie um Blueprint a partir deste repositorio e selecione o arquivo `tcc-backend/render.yaml`. Ele ja define a subpasta `tcc-backend` como raiz do servico Docker.
-2. Configure as variaveis secretas `DB_URL`, `DB_USER`, `DB_PASSWORD` e `JWT_SECRET` solicitadas pelo Blueprint.
-3. Para Supabase, mantenha SSL com `DB_SSL_MODE=require` ou inclua `?sslmode=require` no `DB_URL`.
-4. Se preferir criar um Web Service manual, selecione Docker, informe `tcc-backend` como **Root Directory** e copie tambem as variaveis nao secretas do `render.yaml`, especialmente `CORS_ALLOWED_ORIGIN_PATTERNS`.
+Equipe TCC Backend.
 
-O Render define `PORT` automaticamente, e o Spring Boot le essa porta com `server.port=${PORT:8080}`.
+## Licenca
 
-Depois do primeiro deploy, copie a URL publica gerada pelo Render (por exemplo, `https://seu-servico.onrender.com`) para a configuracao `DESKTOP_API_PROXY_TARGET` do desktop.
-
-## Ping de disponibilidade
-
-O endpoint publico `GET /api/health` responde com `200 OK` sem corpo e sem consultar o banco.
-Para um agendador externo de monitoramento, configure o ping para:
-
-```text
-https://seu-servico.onrender.com/api/health
-```
-
-## Migracoes manuais do banco
-
-Ao atualizar um banco existente que foi criado antes do perfil administrativo, execute
-`docs/migrations/2026-05-26-allow-admin-user-type.sql` uma vez antes de configurar
-`ADMIN_BOOTSTRAP_*`. O script atualiza a restricao da tabela `usuario` para permitir
-os perfis `ALUNO`, `ORIENTADOR` e `ADMIN`.
-
-Se o banco ainda nao possuir cursos e areas de pesquisa, execute
-`docs/migrations/2026-05-27-seed-project-catalogs.sql`. O script e idempotente e
-insere os catalogos iniciais necessarios para cadastro de aluno e criacao de projeto.
-
-## API administrativa
-
-Todas as rotas abaixo exigem JWT de um usuario com tipo `ADMIN`:
-
-- `GET /api/admin/dashboard`: indicadores e atividade recente.
-- `GET|POST|PUT /api/admin/usuarios` e `PATCH /api/admin/usuarios/{id}/ativo`: gestao de alunos, orientadores e administradores.
-- `GET|POST|PUT|DELETE /api/admin/projetos` e `PATCH /api/admin/projetos/{id}/status`: projetos e oportunidades.
-- `GET|DELETE /api/admin/inscricoes` e `PATCH /api/admin/inscricoes/{id}/status`: moderacao de inscricoes.
-- `GET|DELETE /api/admin/documentos` e `PATCH /api/admin/documentos/{id}/status`: revisao documental; preview e download continuam em `/api/documentos/{id}/...`.
-- `GET|POST|PUT|DELETE /api/admin/areas`: areas de pesquisa.
-- `GET /api/admin/relatorios/resumo`, `GET /api/admin/auditoria` e `GET|PUT /api/admin/configuracoes`: governanca.
-
-Alteracoes administrativas de dados sao registradas em auditoria. Configuracoes aceitam apenas chaves operacionais predefinidas e nao armazenam segredos.
+Nao ha arquivo de licenca no repositorio.
