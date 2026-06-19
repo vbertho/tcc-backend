@@ -103,7 +103,7 @@ public class InscricaoService {
                         TipoNotificacao.INSCRICAO_RECEBIDA,
                         "INSCRICAO",
                         salva.getId(),
-                        "/projetos/" + projeto.getId() + "/inscricoes",
+                        "/app/projects/" + projeto.getId() + "/applications",
                         projeto.getTitulo()
                 );
             }
@@ -131,7 +131,7 @@ public class InscricaoService {
                 TipoNotificacao.INSCRICAO_APROVADA,
                 "INSCRICAO",
                 inscricao.getId(),
-                "/usuarios/me/inscricoes",
+                "/app/applications",
                 inscricao.getProjeto().getTitulo()
         );
         return salva;
@@ -155,7 +155,7 @@ public class InscricaoService {
                 TipoNotificacao.INSCRICAO_REJEITADA,
                 "INSCRICAO",
                 inscricao.getId(),
-                "/usuarios/me/inscricoes",
+                "/app/applications",
                 inscricao.getProjeto().getTitulo()
         );
         return salva;

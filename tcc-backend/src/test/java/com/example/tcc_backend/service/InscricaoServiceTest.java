@@ -66,7 +66,7 @@ class InscricaoServiceTest {
                 TipoNotificacao.INSCRICAO_RECEBIDA,
                 "INSCRICAO",
                 null,
-                "/projetos/10/inscricoes",
+                "/app/projects/10/applications",
                 "Projeto 10"
         );
     }
@@ -120,7 +120,7 @@ class InscricaoServiceTest {
                 TipoNotificacao.INSCRICAO_APROVADA,
                 "INSCRICAO",
                 5,
-                "/usuarios/me/inscricoes",
+                "/app/applications",
                 "Projeto 10"
         );
     }
@@ -164,7 +164,7 @@ class InscricaoServiceTest {
                 TipoNotificacao.INSCRICAO_REJEITADA,
                 "INSCRICAO",
                 5,
-                "/usuarios/me/inscricoes",
+                "/app/applications",
                 "Projeto 10"
         );
     }

@@ -91,5 +91,6 @@ class NotificacaoServiceTest {
         verify(notificacaoRepository).save(captor.capture());
         assertThat(captor.getValue().getMensagem()).isEqualTo("Mensagem");
         assertThat(captor.getValue().getTipo()).isEqualTo(TipoNotificacao.MENSAGEM_RECEBIDA);
+        assertThat(captor.getValue().getRotaSugerida()).isEqualTo("/app/chat");
     }
 }

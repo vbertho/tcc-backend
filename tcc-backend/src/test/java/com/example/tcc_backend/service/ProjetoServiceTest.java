@@ -89,7 +89,7 @@ class ProjetoServiceTest {
                 TipoNotificacao.SOLICITACAO_ORIENTACAO,
                 "PROJETO",
                 10,
-                "/projetos/10",
+                "/app/projects/10",
                 "Projeto"
         );
     }
@@ -153,7 +153,7 @@ class ProjetoServiceTest {
                 TipoNotificacao.PROJETO_ACEITO,
                 "PROJETO",
                 10,
-                "/projetos/10",
+                "/app/projects/10",
                 "Projeto 10"
         );
     }
@@ -179,7 +179,7 @@ class ProjetoServiceTest {
                 TipoNotificacao.PROJETO_REJEITADO,
                 "PROJETO",
                 10,
-                "/projetos/10",
+                "/app/projects/10",
                 "Projeto 10"
         );
     }
@@ -281,7 +281,7 @@ class ProjetoServiceTest {
                 TipoNotificacao.INSCRICAO_APROVADA,
                 "PROJETO",
                 10,
-                "/projetos/10",
+                "/app/projects/10",
                 "Projeto 10"
         );
     }

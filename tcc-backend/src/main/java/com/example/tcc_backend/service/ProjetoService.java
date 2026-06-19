@@ -210,7 +210,7 @@ public class ProjetoService {
                     TipoNotificacao.SOLICITACAO_ORIENTACAO,
                     "PROJETO",
                     projeto.getId(),
-                    "/projetos/" + projeto.getId(),
+                    "/app/projects/" + projeto.getId(),
                     projeto.getTitulo()
             );
         }
@@ -333,7 +333,7 @@ public class ProjetoService {
                 TipoNotificacao.INSCRICAO_APROVADA,
                 "PROJETO",
                 projetoId,
-                "/projetos/" + projetoId,
+                "/app/projects/" + projetoId,
                 projeto.getTitulo()
         );
         return salva;
@@ -415,7 +415,7 @@ public class ProjetoService {
                 tipo,
                 "PROJETO",
                 projeto.getId(),
-                "/projetos/" + projeto.getId(),
+                "/app/projects/" + projeto.getId(),
                 projeto.getTitulo()
         );
     }
